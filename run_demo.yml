@@ -1,5 +1,5 @@
 ---
-- hosts: servers
+- hosts: host
   become: yes
   tasks:
     - name: Copy Interface Config
