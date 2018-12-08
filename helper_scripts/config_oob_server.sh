@@ -99,9 +99,6 @@ exit01 ansible_host=192.168.0.41 ansible_user=cumulus
 exit02 ansible_host=192.168.0.42 ansible_user=cumulus
 internet ansible_host=192.168.0.253 ansible_user=cumulus ansible_become_pass=CumulusLinux!
 
-[internet]
-internet ansible_host=192.168.0.253 ansible_user=cumulus ansible_become_pass=CumulusLinux!
-
 EOT
 
 echo " ### Pushing Ansible Config File ###"
