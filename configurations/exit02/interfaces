@@ -25,7 +25,6 @@ iface mgmt
 #To Edge01
 auto swp1
 iface swp1
-  mtu 9216
   # This is required for Vagrant only
   post-up ip link set swp1 promisc on
 
