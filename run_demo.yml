@@ -6,28 +6,18 @@
       copy:
         src: configurations/{{ansible_hostname}}/interfaces
         dest: /etc/network/interfaces
-      register: reboot
 
     - name: Correct LLDP Settings
       lineinfile:
         dest: /etc/lldpd.d/port_info.conf
         line: "configure lldp portidsubtype ifname"
         create: yes
-      notify: restart LLDP
-
-    - name: Apply LLDP Settings
-      meta: flush_handlers
       
     - name: reboot
       shell: sleep 5 && reboot
       async: 1
       poll: 0
 
-  handlers:
-    - name: restart LLDP
-      service:
-        name: lldpd
-        state: restarted
 
 - hosts: network
   become: yes
@@ -125,7 +115,7 @@
       service:
         name: vxrd
         enabled: yes
-        started: yes
+        state: started
         
 - hosts: exit
   become: yes
@@ -134,6 +124,6 @@
       service:
         name: vxrd
         enabled: yes
-        started: yes
+        state: started
         
         
