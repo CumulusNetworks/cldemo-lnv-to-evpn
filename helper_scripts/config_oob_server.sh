@@ -107,8 +107,6 @@ EOT
 echo " ### Pushing Ansible Config File ###"
 cat << EOT > /etc/ansible/ansible.cfg
 [defaults]
-inventory = ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
-hostfile= ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 host_key_checking=False
 
 EOT
