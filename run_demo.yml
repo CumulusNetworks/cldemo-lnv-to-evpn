@@ -93,14 +93,14 @@
     - name: Configure vxsnd.conf
       lineinfile:
         path: /etc/vxsnd.conf
-        line: "src_ip = 10.0.0.21"
-        regexp: "src_ip = {{ ansible_lo.ipv4_secondaries[0].address }}"
+        line: "src_ip = {{ ansible_lo.ipv4_secondaries[0].address }}" 
+        regexp: "src_ip ="
 
     - name: Configure vxsnd.conf
       lineinfile:
         path: /etc/vxsnd.conf
         line: "svcnode_peers = 10.0.0.21 10.0.0.22"
-        regexp: "#svcnode_peers ="             
+        regexp: "svcnode_peers ="             
 
     - name: Enable LNV Service Node Daemon vxsnd
       service:
