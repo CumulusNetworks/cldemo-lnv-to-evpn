@@ -106,6 +106,9 @@ cat << EOT > /etc/ansible/ansible.cfg
 [defaults]
 host_key_checking=False
 
+[ssh_connection]
+ssh_args = -C -o ControlMaster=no -o ControlPersist=60s
+
 EOT
 
 echo " ### Pushing DHCP File ###"
