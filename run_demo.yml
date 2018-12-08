@@ -12,6 +12,12 @@
         dest: /etc/lldpd.d/port_info.conf
         line: "configure lldp portidsubtype ifname"
         create: yes
+        
+    - name: Install traceroute
+      apt:
+        name: traceroute
+        state: latest
+        update_cache: yes
       
     - name: reboot
       shell: sleep 5 && reboot
