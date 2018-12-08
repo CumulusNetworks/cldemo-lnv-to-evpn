@@ -1,0 +1,121 @@
+#########
+## Configured by Ansible
+#########
+
+# Loopback interface
+auto lo
+iface lo inet loopback
+  address 10.0.0.41/32
+  alias loopback interface
+  vxrd-svcnode-ip 10.0.0.200
+  vxrd-src-ip 10.0.0.41
+  clagd-vxlan-anycast-ip 10.0.0.40
+
+# Management interface
+auto eth0
+iface eth0 inet dhcp
+    alias management interface
+    vrf mgmt
+
+auto mgmt
+iface mgmt
+    address 127.0.0.1/8
+    vrf-table auto
+
+#To Edge01
+auto swp1
+iface swp1
+  mtu 9216
+  # This is required for Vagrant only
+  post-up ip link set swp1 promisc on
+
+
+#auto swp2
+#iface swp2
+#  # This is required for Vagrant only
+#  post-up ip link set swp2 promisc on
+
+
+# To Exit02 (for peer link)
+auto swp49
+iface swp49
+  mtu 9216
+  # This is required for Vagrant only
+  post-up ip link set swp49 promisc on
+
+# To Exit02 (for peer link)
+auto swp50
+iface swp50
+  mtu 9216
+  # This is required for Vagrant only
+  post-up ip link set swp50 promisc on
+
+# To Spine01
+auto swp51
+iface swp51
+  mtu 9216
+ 
+# To Spine02
+auto swp52
+iface swp52
+  mtu 9216
+ 
+# CLAG Peerlink bond
+auto peerlink
+iface peerlink
+  mtu 9000
+  bond-slaves swp49 swp50
+
+# CLAG Peerlink L2 interface.
+# This creates VLAN 4094 that only lives on the peerlink bond
+# No other interface will be aware of VLAN 4094
+auto peerlink.4094
+iface peerlink.4094
+  address 169.254.1.1/30
+  clagd-peer-ip 169.254.1.2
+  clagd-backup-ip 10.0.0.42
+  clagd-sys-mac 44:39:39:ff:40:94
+  clagd-priority 100
+
+# Bond to Edge01 server
+auto bond01
+iface bond01
+  mtu 9000
+  bond-slaves swp1
+  bridge-access 13
+  clag-id 1
+
+# Define the bridge for STP
+auto bridge
+iface bridge
+  bridge-vlan-aware yes
+  # does not include the Peerlink.4094 subinterface
+  bridge-ports bond01 peerlink vni-13 vni-24
+  bridge-vids 13 24
+  bridge-pvid 1
+
+auto vlan13
+iface vlan13
+    address 10.1.3.41/24
+    address-virtual 44:39:39:ff:00:13 10.1.3.1/24
+    vlan-id 13
+    vlan-raw-device bridge
+
+auto vlan24
+iface vlan24
+    address 10.2.4.41/24
+    address-virtual 44:39:39:ff:00:24 10.2.4.1/24
+    vlan-id 24
+    vlan-raw-device bridge
+    
+auto vni-13
+iface vni-13
+	bridge-access 13
+	vxlan-id 13
+	vxlan-local-tunnelip 10.0.0.41
+
+auto vni-24
+iface vni-24
+	bridge-access 24
+	vxlan-id 24
+	vxlan-local-tunnelip 10.0.0.41

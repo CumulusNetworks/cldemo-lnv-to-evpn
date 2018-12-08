@@ -1,0 +1,139 @@
+---
+- hosts: servers
+  become: yes
+  tasks:
+    - name: Copy Interface Config
+      copy:
+        src: configurations/{{ansible_hostname}}/interfaces
+        dest: /etc/network/interfaces
+      register: reboot
+
+    - name: Correct LLDP Settings
+      lineinfile:
+        dest: /etc/lldpd.d/port_info.conf
+        line: "configure lldp portidsubtype ifname"
+        create: yes
+      notify: restart LLDP
+
+    - name: Apply LLDP Settings
+      meta: flush_handlers
+      
+    - name: reboot
+      shell: sleep 5 && reboot
+      async: 1
+      poll: 0
+
+  handlers:
+    - name: restart LLDP
+      service:
+        name: lldpd
+        state: restarted
+
+- hosts: network
+  become: yes
+  tasks:
+    - name: Configured NTP in management VRF
+      command: "{{item}}"
+      with_items:
+        - systemctl stop ntp.service
+        - systemctl disable ntp.service
+        - systemctl start ntp@mgmt
+      when: citc is undefined
+
+    - name: Enable FRR Zebra
+      lineinfile:
+        dest: /etc/frr/daemons
+        line: "zebra=yes"
+        regexp: "zebra="
+      notify: restart frr service
+
+    - name: Enable FRR BGP
+      lineinfile:
+        dest: /etc/frr/daemons
+        line: "bgpd=yes"
+        regexp: "bgpd="
+      notify: restart frr service
+
+    - name: Copy Interfaces File
+      copy:
+        src: configurations/{{ansible_hostname}}/interfaces
+        dest: /etc/network/interfaces
+        validate: ifup -a -s -i %s
+      notify: apply interface changes    
+
+    - name: Copy Routing Configuration
+      copy:
+        src: configurations/{{ansible_hostname}}/frr.conf
+        dest: /etc/frr/frr.conf
+        validate: vtysh -C -f %s
+      notify: apply frr config
+         
+  handlers:
+    - name: restart frr service
+      service:
+        name: frr
+        state: restarted      
+
+    - name: apply frr config
+      service:
+        name: frr
+        state: reloaded
+        
+    - name: apply interface changes
+      shell: sleep 5 && systemctl restart networking
+      async: 1
+      poll: 0
+
+        
+- hosts: spine
+  become: yes
+  tasks:
+    - name: Configure vxsnd.conf
+      lineinfile:
+        path: /etc/vxsnd.conf
+        line: "#"
+        regexp: "#install_svcnode_ip = false"
+        
+    - name: Configure vxsnd.conf
+      lineinfile:
+        path: /etc/vxsnd.conf
+        line: "svcnode_ip = 10.0.0.200"
+        regexp: "svcnode_ip ="
+    
+    - name: Configure vxsnd.conf
+      lineinfile:
+        path: /etc/vxsnd.conf
+        line: "src_ip = 10.0.0.21"
+        regexp: "src_ip = {{ ansible_lo.ipv4_secondaries[0].address }}"
+
+    - name: Configure vxsnd.conf
+      lineinfile:
+        path: /etc/vxsnd.conf
+        line: "svcnode_peers = 10.0.0.21 10.0.0.22"
+        regexp: "#svcnode_peers ="             
+
+    - name: Enable LNV Service Node Daemon vxsnd
+      service:
+        name: vxsnd
+        enabled: yes
+        state: started
+        
+- hosts: leaf
+  become: yes
+  tasks:
+    - name: Enable LNV Registration Daemon vxrd
+      service:
+        name: vxrd
+        enabled: yes
+        started: yes
+        
+- hosts: exit
+  become: yes
+  tasks:
+    - name: Enable LNV Registration Daemon vxrd
+      service:
+        name: vxrd
+        enabled: yes
+        started: yes
+        
+        

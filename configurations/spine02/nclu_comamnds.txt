@@ -1,0 +1,31 @@
+net add vrf mgmt
+net commit
+
+net add interface swp1-4,29-32 mtu 9216
+net add interface swp31-32 alias to Spine01
+net add loopback lo ip address 10.0.0.22/32
+net add loopback lo alias loopback interface
+
+net add interface swp1 alias to Leaf01
+net add interface swp2 alias to Leaf02
+net add interface swp3 alias to Leaf03
+net add interface swp4 alias to Leaf04
+net add interface swp29 alias to Exit01
+net add interface swp30 alias to Exit02
+net add hostname spine02
+net add interface swp1-4,29-30 ipv6 nd ra-interval 10
+net del interface swp1-4,29-30 ipv6 nd suppress-ra
+
+net add bgp autonomous-system 65020
+net add bgp router-id 10.0.0.22
+net add bgp bestpath as-path multipath-relax
+net add bgp neighbor swp1 interface remote-as external
+net add bgp neighbor swp2 interface remote-as external
+net add bgp neighbor swp3 interface remote-as external
+net add bgp neighbor swp4 interface remote-as external
+net add bgp ipv4 unicast network 10.0.0.22/32
+
+net add bgp l2vpn evpn neighbor swp1 activate
+net add bgp l2vpn evpn neighbor swp2 activate
+net add bgp l2vpn evpn neighbor swp3 activate
+net add bgp l2vpn evpn neighbor swp4 activate
