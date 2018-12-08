@@ -330,7 +330,7 @@ exit 0
 EOT
 
 mkdir l3-clos
-git clone -b l3-clos https://github.com/CumulusNetworks/cldemo-l3clos l3-clos
+git clone -b lnv-to-evpn https://github.com/jubetz/cldemo-lnv-to-evpn lnv-to-evpn
 
 echo "############################################"
 echo "      DONE!"
