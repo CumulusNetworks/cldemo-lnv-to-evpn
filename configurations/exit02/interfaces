@@ -70,8 +70,8 @@ iface peerlink
 # No other interface will be aware of VLAN 4094
 auto peerlink.4094
 iface peerlink.4094
-  address 169.254.1.1/30
-  clagd-peer-ip 169.254.1.2
+  address 169.254.1.2/30
+  clagd-peer-ip 169.254.1.1
   clagd-backup-ip 10.0.0.41
   clagd-sys-mac 44:39:39:ff:40:94
   clagd-priority 100
