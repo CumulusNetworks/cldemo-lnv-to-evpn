@@ -17,7 +17,8 @@ For more information about the reference topology and other demos based on this 
 
 ### Logging in
 
-```$ vagrant ssh oob-mgmt-server
+```
+$ vagrant ssh oob-mgmt-server
                                                  _
       _______   x x x                           | |
  ._  <_______~ x X x   ___ _   _ _ __ ___  _   _| |_   _ ___
@@ -32,16 +33,20 @@ For more information about the reference topology and other demos based on this 
 #                     Out Of Band Management Station
 #
 ############################################################################
-cumulus@oob-mgmt-server:~$```
+cumulus@oob-mgmt-server:~$
+```
 
-```cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104
-> '
+test
+
+
+```cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
 server01 | SUCCESS | rc=0 >>
 traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
  1  10.1.3.1  2.161 ms  2.106 ms  2.071 ms
  2  10.2.4.104  6.210 ms  6.165 ms *
 
-cumulus@oob-mgmt-server:~$ ```
+cumulus@oob-mgmt-server:~$
+```
 
 ---
 
