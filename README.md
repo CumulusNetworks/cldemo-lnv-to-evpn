@@ -16,6 +16,7 @@ For more information about the reference topology and other demos based on this 
     vagrant up
 
 ### Logging in
+Once Vagrant has finished all of its provisioning, log into the oob-mgmt-server.  We'll be able to use ansible from the oob-mgmt-server and be able to jump into the other nodes in the topology from here.
 
 ```
 $ vagrant ssh oob-mgmt-server
