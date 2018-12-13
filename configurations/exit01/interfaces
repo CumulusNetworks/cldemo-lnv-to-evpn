@@ -38,14 +38,12 @@ iface swp1
 # To Exit02 (for peer link)
 auto swp49
 iface swp49
-  mtu 9216
   # This is required for Vagrant only
   post-up ip link set swp49 promisc on
 
 # To Exit02 (for peer link)
 auto swp50
 iface swp50
-  mtu 9216
   # This is required for Vagrant only
   post-up ip link set swp50 promisc on
 
