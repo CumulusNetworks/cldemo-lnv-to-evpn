@@ -99,17 +99,15 @@ exit01 ansible_host=192.168.0.41 ansible_user=cumulus
 exit02 ansible_host=192.168.0.42 ansible_user=cumulus
 internet ansible_host=192.168.0.253 ansible_user=cumulus ansible_become_pass=CumulusLinux!
 
-[internet]
-internet ansible_host=192.168.0.253 ansible_user=cumulus ansible_become_pass=CumulusLinux!
-
 EOT
 
 echo " ### Pushing Ansible Config File ###"
 cat << EOT > /etc/ansible/ansible.cfg
 [defaults]
-inventory = ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
-hostfile= ./.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory
 host_key_checking=False
+
+[ssh_connection]
+ssh_args = -C -o ControlMaster=no -o ControlPersist=60s
 
 EOT
 
@@ -330,7 +328,7 @@ exit 0
 EOT
 
 mkdir l3-clos
-git clone -b l3-clos https://github.com/CumulusNetworks/cldemo-l3clos l3-clos
+git clone -b lnv-to-evpn https://github.com/jubetz/cldemo-lnv-to-evpn lnv-to-evpn
 
 echo "############################################"
 echo "      DONE!"
