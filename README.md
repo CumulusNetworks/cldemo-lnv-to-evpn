@@ -1,14 +1,17 @@
 # Cumulus Linux LNV to EVPN Migration
 ![Reference Topology](./documentation/cldemo_topology.png "Reference Topology")
 
-Welcome to the Cumulus Linux LNV to EVPN Migration demo. Using the [Cumulus reference topology](https://github.com/CumulusNetworks/cldemo-vagrant), this demo will walk through the steps to migrate your VXLAN control plane to the de facto standard using BGP EVPN.  LNV (the vxfld package) will be depricated in Cumulus Linux 4.x in favor of using EVPN to manage the VXLAN overlay. 
+Welcome to the Cumulus Linux LNV to EVPN Migration demo. Using the [Cumulus reference topology](https://github.com/CumulusNetworks/cldemo-vagrant), this demo will walk through the steps to migrate your VXLAN control plane to the de facto standard using BGP EVPN.  LNV (the vxfld package) will be depricated in Cumulus Linux 4.x in favor of using EVPN to manage the VXLAN overlay.
 
-Link to the companion whitepaper:
+This demo will start you with an LNV controlled VXLAN topology, then step through the process of converting to EVPN using BGP. One way will be through using ad-hoc ansible commands and NCLU.  The other way will be through an Ansible playbook that directly changes the config files and restarts the associated services.
+
+Need to also link to the companion whitepaper:
 
 For more information about the reference topology and other demos based on this topology, head on over to: https://github.com/CumulusNetworks/cldemo-vagrant
 
-
 ### Provisioning the Topology
+
+After cloning (or downloading/extracting the .zip), change into the new directory named "cldemo-lnv-to-evpn." From there, bring up the oob-mgmt-server and oob-mgmt-switch first.  Brining the oob-mgmt devices up first helps make sure that the DHCP server on the oob-mgmt-server is up and reliably ready to hand out IP addresses to the rest of the network when we provision it all with the last step, 'vagrant up'
 
     git clone https://github.com/cumulusnetworks/cldemo-lnv-to-evpn
     cd cldemo-lnv-to-evpn
@@ -16,7 +19,7 @@ For more information about the reference topology and other demos based on this 
     vagrant up
 
 ### Logging in
-Once Vagrant has finished all of its provisioning, log into the oob-mgmt-server.  We'll be able to use ansible from the oob-mgmt-server and be able to jump into the other nodes in the topology from here.
+Once Vagrant has finished all of its provisioning, log into the oob-mgmt-server.  We'll be able to use ansible from the oob-mgmt-server to setup the rest of the demo and be able to jump into the other nodes in the topology from here.
 
 ```
 $ vagrant ssh oob-mgmt-server
@@ -35,6 +38,16 @@ $ vagrant ssh oob-mgmt-server
 #
 ############################################################################
 cumulus@oob-mgmt-server:~$
+```
+### Setting up the demo
+After logging into the oob-mgmt-server, change directories to the 'lnv-to-evpn' folder.  From there, run the ansible playbook named run_demo.yml
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible-playbook run_demo.yml 
+
+PLAY [host] *************************************************************************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************************
 ```
 
 test
