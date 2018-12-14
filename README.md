@@ -5,7 +5,7 @@ Welcome to the Cumulus Linux LNV to EVPN Migration demo. Using the [Cumulus refe
 
 This demo will start you with an LNV controlled VXLAN topology, then step through the process of converting to EVPN using BGP. One way will be through using ad-hoc ansible commands and NCLU.  The other way will be through an Ansible playbook that directly changes the config files and restarts the associated services.  Below are a few additional notes and details of this topology:
 
-1. Using a [centralized routing](https://cumulusnetworks.com/blog/vxlan-designs-part-1/) model.  Routing between VXLANs is done at the exit leafs.  The leaf switches exit01 and exit02 have the SVIs and provide the first hop redundancy.
+1. Using a [centralized routing](https://cumulusnetworks.com/blog/vxlan-designs-part-1/) model. Routing between VXLANs is done at the exit leafs.  The leaf switches exit01 and exit02 have the SVIs and provide the first hop redundancy.
 2. VXLAN is in active-active mode on the MLAG enabled leafs.  The leaf switches are in pairs to provide an MLAG bond to the servers (simulating a rack).  Inbound VXLAN traffic from the rest of the fabric to the pair is addressed to the clagd-vxlan-anycast-ip IP address.  We'll see this clagd-vxlan-anycast-ip address instead of the individual loopbacks when looking at some LNV and BGP EVPN output
 3. The LNV Service Nodes (vxsnd) are running in [anycast mode](https://docs.cumulusnetworks.com/display/DOCS/Lightweight+Network+Virtualization+Overview#LightweightNetworkVirtualizationOverview-ScaleLNVbyLoadBalancingwithAnycast) on both spine01 and spine02.
 
@@ -67,7 +67,7 @@ test
 
 ### Checking the LNV Environment
 
-After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology.  Lets run a few commands to generate some traffic (mac address learning) and illustrate the topology.  First, lets run a traceroute from server01 to server04 in the other subnet and in the other rack.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
+After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology.  Lets run a few commands to generate some traffic and illustrate the topology.  First, lets run a traceroute from server01 to server04 in the other subnet and in the other rack.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
 
 ```
 cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
@@ -79,7 +79,14 @@ traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
 cumulus@oob-mgmt-server:~$
 ```
 
+Next, lets confirm that LNV is running and   Again, we can use ansible to run an NCLU command on all of the network nodes at the same time.
 
+
+Lastly, lets take a look at a bridge mac address table on one of the leafs that has the VXLAN VTEPs.
+
+### Performing the migration
+
+test
 
 ---
 
