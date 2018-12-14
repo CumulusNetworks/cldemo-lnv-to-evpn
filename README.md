@@ -60,7 +60,8 @@ test
 
 After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology.  Lets run a few commands to generate some traffic (mac address learning) and illustrate the topology.  First, lets run a traceroute from server01 to server04 in the other subnet and in the other rack.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
 
-```cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
+```
+cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
 server01 | SUCCESS | rc=0 >>
 traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
  1  10.1.3.1  2.161 ms  2.106 ms  2.071 ms
