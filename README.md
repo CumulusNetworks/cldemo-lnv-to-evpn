@@ -81,8 +81,75 @@ cumulus@oob-mgmt-server:~$
 
 Next, lets confirm that LNV is running and   Again, we can use ansible to run an NCLU command on all of the network nodes at the same time.
 
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show lnv'
+spine01 | SUCCESS | rc=0 >>
 
-Lastly, lets take a look at a bridge mac address table on one of the leafs that has the VXLAN VTEPs.
+  LNV Role           : Service Node
+  Version            : 3
+  Local IP           : 10.0.0.21
+  Anycast IP         : 10.0.0.200
+  UDP Data Port      : 4789
+  UDP Control Port   : 10001
+  Service Node Peers : 10.0.0.21, 10.0.0.22
+
+  VNI  VTEP        Ageout
+  ---  ----------  ------
+  13   10.0.0.100      86 <- leaf01/02
+       10.0.0.100      88 <- leaf01/02
+       10.0.0.101      86 <- leaf03/04
+       10.0.0.101      86 <- leaf03/04
+       10.0.0.40       90 <- exit01/02
+       10.0.0.40       90 <- exit01/02
+  24   10.0.0.100      86
+       10.0.0.100      88
+       10.0.0.101      86
+       10.0.0.101      86
+       10.0.0.40       90
+       10.0.0.40       90
+<trimmed for brevity>
+```
+The output from the ad hoc ansible command will be separated by host.  You should see that the spines are LNV Role: Service Node and leafs/exit are LNV Role: VTEP. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's anycast address.
+
+Lastly, lets take a look at a bridge mac address table on one of the leafs that has the VXLAN VTEPs.  Your MAC addresses may differ from this example.  Notice that the linux bridge also learns the source VTEP IP address (TunnelDest) for MAC addresses that exist behind other VTEPs. 
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible leaf01 -a 'net show bridge macs'
+leaf01 | SUCCESS | rc=0 >>
+
+VLAN      Master  Interface  MAC                TunnelDest  State      Flags  LastSeen
+--------  ------  ---------  -----------------  ----------  ---------  -----  --------
+13        bridge  bond01     00:03:00:11:11:02                                00:00:36
+13        bridge  bond01     02:03:00:11:11:01                                00:00:07
+13        bridge  bond01     02:03:00:11:11:02                                00:01:46
+13        bridge  vni-13     44:38:39:00:00:0c                                00:01:46
+13        bridge  vni-13     44:38:39:00:00:4b                                00:01:46
+13        bridge  vni-13     44:39:39:ff:00:13                                00:01:46
+24        bridge  bond02     02:03:00:22:22:01                                00:00:07
+24        bridge  bond02     02:03:00:22:22:02                                00:01:46
+24        bridge  vni-24     00:03:00:44:44:02                                00:09:03
+24        bridge  vni-24     44:38:39:00:00:0c                                00:01:46
+24        bridge  vni-24     44:38:39:00:00:4b                                00:01:46
+24        bridge  vni-24     44:39:39:ff:00:24                                00:01:46
+untagged          vni-13     00:00:00:00:00:00  10.0.0.40   permanent  self   00:10:48 <- BUM traffic handling
+untagged          vni-13     00:00:00:00:00:00  10.0.0.101  permanent  self   00:10:48 <- BUM traffic handling
+untagged          vni-13     44:38:39:00:00:0c  10.0.0.40              self   00:09:02 <- Learned VXLAN MAC address
+untagged          vni-13     44:38:39:00:00:4b  10.0.0.40              self   00:09:02 <- Learned VXLAN MAC address
+untagged          vni-13     44:39:39:ff:00:13  10.0.0.40              self   00:10:03 <- Learned VXLAN MAC address
+untagged          vni-24     00:00:00:00:00:00  10.0.0.40   permanent  self   00:10:48 <- BUM traffic handling
+untagged          vni-24     00:00:00:00:00:00  10.0.0.101  permanent  self   00:10:48 <- BUM traffic handling
+untagged          vni-24     00:03:00:44:44:02  10.0.0.101             self   00:09:03 <- Learned VXLAN MAC address
+untagged          vni-24     44:38:39:00:00:0c  10.0.0.40              self   00:09:02 <- Learned VXLAN MAC address
+untagged          vni-24     44:38:39:00:00:4b  10.0.0.40              self   00:09:02 <- Learned VXLAN MAC address
+untagged          vni-24     44:39:39:ff:00:24  10.0.0.40              self   00:09:30 <- Learned VXLAN MAC address
+untagged  bridge  bond01     44:38:39:00:00:03              permanent         00:10:51
+untagged  bridge  bond02     44:38:39:00:00:14              permanent         00:10:51
+untagged  bridge  peerlink   44:38:39:00:00:10              permanent         00:10:51
+untagged  bridge  vni-13     9e:32:c5:25:6b:84              permanent         00:10:51
+untagged  bridge  vni-24     6e:76:b8:14:da:2b              permanent         00:10:51
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
+```
 
 ### Performing the migration
 
