@@ -80,7 +80,12 @@
       async: 1
       poll: 0
 
-        
+- hosts: network
+  tasks:
+    - name: Pause to ensure networking reload completes
+      pause:
+        seconds: 5
+      
 - hosts: spine
   become: yes
   tasks:
