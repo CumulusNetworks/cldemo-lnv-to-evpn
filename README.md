@@ -1,5 +1,5 @@
-# Cumulus Linux LNV to EVPN Migration
-![Reference Topology](./documentation/cldemo_topology.png "Reference Topology")
+# Cumulus Linux LNV to EVPN Migration Demo
+![Reference Topology](./lnv-to-evpn-topo.png "Topology")
 
 Welcome to the Cumulus Linux LNV to EVPN Migration demo. Using the [Cumulus reference topology](https://github.com/CumulusNetworks/cldemo-vagrant), this demo will walk through the steps to migrate your LNV controlled VXLAN to the de facto standard using BGP EVPN.  LNV (the vxfld package) will be depricated in Cumulus Linux 4.x in favor of using EVPN to manage VXLAN overlays.
 
