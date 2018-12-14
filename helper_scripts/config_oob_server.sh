@@ -108,6 +108,7 @@ host_key_checking=False
 
 [ssh_connection]
 ssh_args = -C -o ControlMaster=no -o ControlPersist=60s
+pipelining=True
 
 EOT
 
