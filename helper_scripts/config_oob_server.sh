@@ -99,6 +99,14 @@ exit01 ansible_host=192.168.0.41 ansible_user=cumulus
 exit02 ansible_host=192.168.0.42 ansible_user=cumulus
 internet ansible_host=192.168.0.253 ansible_user=cumulus ansible_become_pass=CumulusLinux!
 
+[vtep]
+leaf04 ansible_host=192.168.0.14 ansible_user=cumulus
+leaf02 ansible_host=192.168.0.12 ansible_user=cumulus
+leaf03 ansible_host=192.168.0.13 ansible_user=cumulus
+leaf01 ansible_host=192.168.0.11 ansible_user=cumulus
+exit01 ansible_host=192.168.0.41 ansible_user=cumulus
+exit02 ansible_host=192.168.0.42 ansible_user=cumulus
+
 EOT
 
 echo " ### Pushing Ansible Config File ###"
