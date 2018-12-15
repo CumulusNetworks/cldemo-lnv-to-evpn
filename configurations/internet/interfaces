@@ -14,20 +14,19 @@ auto eth0
 iface eth0
     address 192.168.0.253/24
 
-# Port to Leaf01
+# Port to exit01
 auto swp1
 iface swp1
   mtu 9216
   alias to Leaf01
 
-# Port to Leaf02
+# Port to exit02
 auto swp2
 iface swp2
   mtu 9216
   alias to Leaf02
 
-# Port to Spine02
+#
 auto swp48
 iface swp48
   mtu 9216
-  alias to Spine02
