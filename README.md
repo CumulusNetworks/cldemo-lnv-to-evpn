@@ -163,7 +163,7 @@ spine - spine01, spine02
 
 Remember, these NCLU changes won't take effect until we issue the 'net commit' at a later step.
 
-*Note: Repetitive output will be omitted for brevity and indicated by <snip>*
+*Note: Repetitive output will be omitted for brevity and indicated by `<snip>`*
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add bgp l2vpn evpn neighbor swp51-52 activate'
