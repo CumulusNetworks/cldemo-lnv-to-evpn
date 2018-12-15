@@ -320,9 +320,9 @@ This commit will return a fairly significant amount of output from each node ret
 
 This is the moment where BGP will restart and interfaces will be reloaded to apply configuration changes (specifically the bridge learning change).  
 
-6. Verify
+## Verification
 
-- Check that LNV is disabled.  'net show lnv' should return blank output.  Compare this output against the output from earlier on when LNV was enabled and functional.
+1. Check that LNV is disabled.  'net show lnv' should return blank output.  Compare this output against the output from earlier on when LNV was enabled and functional.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show lnv'
@@ -356,7 +356,7 @@ exit02 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-- Ensure that BGP neighbors are up and both ipv4 and l2vpn evpn address families are active.  You can continue to run these commands on all network nodes using ansible or individually on a node.
+2. Ensure that BGP neighbors are up and both ipv4 and l2vpn evpn address families are active.  You can continue to run these commands on all network nodes using ansible or individually on a node.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show bgp sum'
@@ -406,7 +406,7 @@ Total number of neighbors 6
 
 In this working example from looking at spine01, we can see that we have all 6 adjacent neighbors showing as up for both address families.  It's important to ensure that we're seeing a 'PfxRcd' that's larger than 0 to let us know that we're recieving routes.  This number will vary depending on the amount of mac addresses learned.
 
-- Generate some test traffic
+3. Generate some test traffic
 
 Repeat the traceroute from earlier `ansible server01 -a 'traceroute -n 10.2.4.104`.
 
@@ -420,7 +420,7 @@ traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
 cumulus@oob-mgmt-server:~$ 
 ```
 
-- Check the BGP EVPN type-2 and type-3 routes
+4. Check the BGP EVPN type-2 and type-3 routes
 
 The traceroute above should ensure that the linux bridges have learned the MAC addresses of at least server01, server04 and the mac addresses of the SVIs performing routing at the exit nodes.  This information should be redistibuted into BGP as routes in the EVPN address family.  We can inspect these type-2 (MAC to IP) routes and type-3 (VTEP VXLAN tunnel interface IP) routes by checking 'net show bgp evpn route'
 
@@ -451,7 +451,7 @@ Route Distinguisher: 10.0.0.11:3
 
 Notice the legend at the top of the command output.  The number in the first bracket `[2]` or `[3]` indicates whether or not this is a type-2 or type-3 route.  In this output you can verify that MAC addresses of the servers or SVIs are being learned and what their VTEP VXLAN tunnel IP address is *remember clagd-vxlan-anycast-ip is used for active-active mode*
 
-- Check bridge forwarding table
+5. Check bridge forwarding table
 
 After type-2 and type-3 routes are learned through BGP, this information has to then be installed into the bridge table for traffic forwarding to actually occur.  The type-2 routes contain all of the information that the linux bridge needs to install a learned mac address with its VXLAN tunnel IP adddress into the bridge table.  The type-3 routes are installed as the all 00's entry to indicate a VTEP that needs a replicated copy of a packet for BUM (broadcast unknown unicast and multicast) packet handling.
 
