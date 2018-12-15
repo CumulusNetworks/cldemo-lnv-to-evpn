@@ -84,7 +84,7 @@
   tasks:
     - name: Pause to ensure networking reload completes
       pause:
-        seconds: 5
+        seconds: 10
       
 - hosts: spine
   become: yes
