@@ -110,7 +110,7 @@ spine01 | SUCCESS | rc=0 >>
        10.0.0.40       90
 <snip>
 ```
-The output from the ad hoc ansible command will be separated by host.  Look for lines similar to this, "spine01 | SUCCESS | rc=0 >>". You should see that the spines are **LNV Role: Service Node** and leafs/exit are **LNV Role: VTEP**. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's *clagd-vxlan-anycast-ip* address and not it's primary loopback address.
+The output from the ad hoc ansible command will be separated by host.  Look for lines similar to this, `spine01 | SUCCESS | rc=0 >>`. You should see that the spines are **LNV Role: Service Node** and leafs/exit are **LNV Role: VTEP**. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's *clagd-vxlan-anycast-ip* address and not it's primary loopback address.
 
 Lastly, lets take a look at a bridge mac address table on one of the leafs that has both VXLAN VTEPs.  Your MAC addresses may differ from this example.  Notice that the linux bridge also learns the source VTEP IP address (TunnelDest) for MAC addresses that exist behind other VTEPs. 
 
@@ -393,10 +393,56 @@ Total number of neighbors 6
 
 In this working example from looking at spine01, we can see that we have all 6 adjacent neighbors showing as up for both address families.  It's important to ensure that we're seeing a 'PfxRcd' that's larger than 0 to let us know that we're recieving routes.  This number will vary depending on the amount of mac addresses learned.
 
-- Check evpn type-2 and type-3 routes
+- Generate some test traffic
+
+Repeat the traceroute from earlier `ansible server01 -a 'traceroute -n 10.2.4.104`.
+
+```
+cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
+server01 | SUCCESS | rc=0 >>
+traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
+ 1  10.1.3.1  6.041 ms  5.993 ms  5.958 ms
+ 2  10.2.4.104  12.836 ms  12.811 ms  9.030 ms
+
+cumulus@oob-mgmt-server:~$ 
+```
+
+- Check the BGP EVPN type-2 and type-3 routes
+
+The traceroute above should ensure that the linux bridges have learned the MAC addresses of at least server01, server04 and the mac addresses of the SVIs performing routing at the exit nodes.  This information should be redistibuted into BGP as routes in the EVPN address family.  We can inspect these type-2 (MAC to IP) routes and type-3 (VTEP VXLAN tunnel interface IP) routes by checking 'net show bgp evpn route'
+
+```
+cumulus@leaf01:mgmt-vrf:~$ net show bgp evpn route
+BGP table version is 30, local router ID is 10.0.0.11
+Status codes: s suppressed, d damped, h history, * valid, > best, i - internal
+Origin codes: i - IGP, e - EGP, ? - incomplete
+EVPN type-2 prefix: [2]:[ESI]:[EthTag]:[MAClen]:[MAC]:[IPlen]:[IP]
+EVPN type-3 prefix: [3]:[EthTag]:[IPlen]:[OrigIP]
+EVPN type-5 prefix: [5]:[ESI]:[EthTag]:[IPlen]:[IP]
+
+   Network          Next Hop            Metric LocPrf Weight Path
+Route Distinguisher: 10.0.0.11:2
+*> [2]:[0]:[0]:[48]:[00:03:00:11:11:02]
+                    10.0.0.100                         32768 i
+*> [2]:[0]:[0]:[48]:[02:03:00:11:11:01]
+                    10.0.0.100                         32768 i
+*> [2]:[0]:[0]:[48]:[02:03:00:11:11:02]
+                    10.0.0.100                         32768 i
+*> [3]:[0]:[32]:[10.0.0.100]
+                    10.0.0.100                         32768 i
+Route Distinguisher: 10.0.0.11:3
+*> [2]:[0]:[0]:[48]:[00:03:00:22:22:01]
+                    10.0.0.100                         32768 i
+<snip>
+```
+
+Notice the legend at the top of the command output.  The number in the first bracket `[2]` or `[3]` indicates whether or not this is a type-2 or type-3 route.  In this output you can verify that MAC addresses of the servers or SVIs are being learned and what their VTEP VXLAN tunnel IP address is *remember clagd-vxlan-anycast-ip is used for active-active mode*
 
 - Check bridge forwarding table
 
+After type-2 and type-3 routes are learned through BGP, this information has to then be installed into the bridge table for traffic forwarding to actually occur.  The type-2 routes contain all of the information that the linux bridge needs to install a learned mac address with its VXLAN tunnel IP adddress into the bridge table.  The type-3 routes are installed as the all 00's entry to indicate a VTEP that needs a replicated copy of a packet for BUM (broadcast unknown unicast and multicast) packet handling.
+
+We should see the information from the BGP EVPN routes be populated as described above into the bridge table.
 
 
 ---
