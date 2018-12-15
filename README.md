@@ -153,7 +153,186 @@ cumulus@oob-mgmt-server:~/lnv-to-evpn$
 
 ### Performing the migration
 
-test
+We'll perform this upgrade step by step using NCLU and ad hoc ansible commands.  Device groups that we'll be using are:
+
+vtep - leaf01, leaf02, leaf03, leaf04, exit01, exit02<br>
+spine - spine01, spine02
+
+1. First lets get the new EVPN BGP address family configuration staged.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  It's only really two things. One, activate the l2vpn evpn address family for each neighbor. Then, enable advertise-all-vni.
+
+Remeber, This won't take effect until we issue the 'net commit'
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add bgp l2vpn evpn neighbor swp51-52 activate'
+leaf02 | SUCCESS | rc=0 >>
+
+
+exit01 | SUCCESS | rc=0 >>
+
+
+leaf03 | SUCCESS | rc=0 >>
+
+
+leaf01 | SUCCESS | rc=0 >>
+
+
+leaf04 | SUCCESS | rc=0 >>
+
+
+exit02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add bgp l2vpn evpn advertise-all-vni'
+leaf02 | SUCCESS | rc=0 >>
+
+
+exit01 | SUCCESS | rc=0 >>
+
+
+leaf03 | SUCCESS | rc=0 >>
+
+
+leaf01 | SUCCESS | rc=0 >>
+
+
+leaf04 | SUCCESS | rc=0 >>
+
+
+exit02 | SUCCESS | rc=0 >>
+```
+
+Then repeat those steps for the spines.  Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'net add bgp l2vpn evpn neighbor swp1-4 activate'
+spine01 | SUCCESS | rc=0 >>
+
+
+spine02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'net add bgp l2vpn evpn neighbor swp29-30 activate'
+spine02 | SUCCESS | rc=0 >>
+
+
+spine01 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
+```
+
+Now lets stage the configuration change to disable bridge learning on all of the VTEP interfaces.
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add vxlan vni-13 bridge learning off'
+exit01 | SUCCESS | rc=0 >>
+
+
+leaf01 | SUCCESS | rc=0 >>
+
+
+leaf03 | SUCCESS | rc=0 >>
+
+
+leaf02 | SUCCESS | rc=0 >>
+
+
+leaf04 | SUCCESS | rc=0 >>
+
+
+exit02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add vxlan vni-24 bridge learning off'
+leaf03 | SUCCESS | rc=0 >>
+
+
+leaf01 | SUCCESS | rc=0 >>
+
+
+exit01 | SUCCESS | rc=0 >>
+
+
+leaf02 | SUCCESS | rc=0 >>
+
+
+leaf04 | SUCCESS | rc=0 >>
+
+
+exit02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
+```
+
+Next we want to disable and stop the LNV service on all of the nodes where we have it enabled.  In our case, vxrd runs everywhere we have a VTEP (leafs and exit). Then the service nodes (vxsnd) is running on both spines.  We'll want to both stop it and also disable it so that it doesn't start again at reboot.
+
+Note, we need --become for these commands
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'systemctl stop vxsnd.service' --become
+spine01 | SUCCESS | rc=0 >>
+
+
+spine02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'systemctl disable vxsnd.service' --become
+spine01 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxsnd.service.
+
+spine02 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxsnd.service.
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
+```
+
+Repeat these two steps on the VTEP nodes, but remember the service is vxrd here.
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'systemctl stop vxrd.service' --become
+leaf01 | SUCCESS | rc=0 >>
+
+
+leaf02 | SUCCESS | rc=0 >>
+
+
+exit01 | SUCCESS | rc=0 >>
+
+
+leaf04 | SUCCESS | rc=0 >>
+
+
+leaf03 | SUCCESS | rc=0 >>
+
+
+exit02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'systemctl disable vxrd.service' --become
+leaf01 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
+
+exit01 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
+
+leaf02 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
+
+leaf03 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
+
+leaf04 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
+
+exit02 | SUCCESS | rc=0 >>
+Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
+```
+
+
 
 ---
 
