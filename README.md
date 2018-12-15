@@ -56,6 +56,7 @@ cumulus@oob-mgmt-server:~$
 After logging into the oob-mgmt-server, change directories to the 'lnv-to-evpn' folder.  From there, run the ansible playbook named run_demo.yml
 
 ```
+cumulus@oob-mgmt-server:~$cd lnv-to-evpn
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible-playbook run_demo.yml 
 
 PLAY [host] *************************************************************************************************************************************************************
@@ -63,11 +64,11 @@ PLAY [host] ********************************************************************
 TASK [Gathering Facts] **************************************************************************************************************************************************
 ```
 
-test
+This playbook will configure the baseline reference topology to what is described and illustrated at the top of this guide. 
 
 ### Checking the LNV Environment
 
-After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology.  Lets run a few commands to generate some traffic and illustrate the topology.  First, lets run a traceroute from server01 to server04 in the other subnet and in the other rack.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
+After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology.  Lets run a few commands to generate some traffic and to illustrate the topology.  First, lets run a traceroute from server01 to server04 that is in the other subnet and also in the other rack.  Success here means both routing is functional bi-directionally, as is VXLAN encap/decap and bridging.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
 
 ```
 cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
@@ -107,11 +108,11 @@ spine01 | SUCCESS | rc=0 >>
        10.0.0.101      86
        10.0.0.40       90
        10.0.0.40       90
-<trimmed for brevity>
+<snip>
 ```
-The output from the ad hoc ansible command will be separated by host.  You should see that the spines are LNV Role: Service Node and leafs/exit are LNV Role: VTEP. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's anycast address.
+The output from the ad hoc ansible command will be separated by host.  Look for lines similar to this, "spine01 | SUCCESS | rc=0 >>". You should see that the spines are **LNV Role: Service Node** and leafs/exit are **LNV Role: VTEP**. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's *clagd-vxlan-anycast-ip* address and not it's primary loopback address.
 
-Lastly, lets take a look at a bridge mac address table on one of the leafs that has the VXLAN VTEPs.  Your MAC addresses may differ from this example.  Notice that the linux bridge also learns the source VTEP IP address (TunnelDest) for MAC addresses that exist behind other VTEPs. 
+Lastly, lets take a look at a bridge mac address table on one of the leafs that has both VXLAN VTEPs.  Your MAC addresses may differ from this example.  Notice that the linux bridge also learns the source VTEP IP address (TunnelDest) for MAC addresses that exist behind other VTEPs. 
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible leaf01 -a 'net show bridge macs'
@@ -153,16 +154,16 @@ cumulus@oob-mgmt-server:~/lnv-to-evpn$
 
 ### Performing the migration
 
-We'll perform this upgrade step by step using NCLU and ad hoc ansible commands.  Device groups that we'll be using are:
+We'll perform this upgrade step by step using NCLU and ad hoc ansible commands.  We have already defined a set of useful device groups in the ansible hosts file.  We have some divergence in the configuration tasks between the LNV VTEP clients (leaf/exit) and the LNV Service nodes (spine).  Due to this, it makes sense to have two groups for ansible to use.  One being the LNV VTEP clients (using the vxrd service) and the other bring the LNV Service nodes (using the vxsnd service).  In our demo, we have two groups, "vtep" and "spine" that we'll be using.
 
 vtep - leaf01, leaf02, leaf03, leaf04, exit01, exit02<br>
 spine - spine01, spine02
 
-1. First lets get the new EVPN BGP address family configuration staged.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  It's only really two things. One, activate the l2vpn evpn address family for each neighbor. Then, enable advertise-all-vni.
+1. First lets activate the l2vpn evpn address family setup for all of our neighbors.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  It's only really two things. One, activate the l2vpn evpn address family for each/all neighbors. Then, enable advertise-all-vni.
 
 Remember, these NCLU changes won't take effect until we issue the 'net commit' at a later step.
 
-Note: Repetitive output will be omitted for brevity and indicated by <snip>
+*Note: Repetitive output will be omitted for brevity and indicated by <snip>*
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add bgp l2vpn evpn neighbor swp51-52 activate'
@@ -185,7 +186,7 @@ exit01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~$ 
 ```
 
-2. Then repeat those steps for the spines.  Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
+We have repeat these steps for the spines.  The configuration is slightly different here.  Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'net add bgp l2vpn evpn neighbor swp1-4 activate'
@@ -205,7 +206,7 @@ spine01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-3. Now lets stage the configuration change to disable bridge learning on all of the VTEP interfaces.
+2. The next step will be to disable bridge learning on all of the VXLAN VTEP interfaces (leafs/exit):
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add vxlan vni-13 bridge learning off'
@@ -227,7 +228,7 @@ leaf01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-4. Next, remove the vxrd configuration from the loopback interfaces of VTEP nodes.  There are two items, the vxrd-src-ip and the vxrd-svcnode-ip
+3. Then we will remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). We want to remove the vxrd-src-ip and vxrd-svcnode-ip configuration.
 
 ```
 cumulus@oob-mgmt-server:~$ ansible vtep -a 'net del loopback lo vxrd-src-ip'
@@ -251,7 +252,7 @@ cumulus@oob-mgmt-server:~$
 
 ```
 
-5. Then we want to disable and stop the LNV service on all of the nodes where we have it enabled.  In our case, vxrd runs everywhere we have a VTEP (leafs and exit). Then the service nodes (vxsnd) is running on both spines.  We'll want to both stop it and also disable it so that it doesn't start again at reboot.
+4. Before we 'net commit' our changes that will enable EVPN, we need to disable and stop the LNV service on all of the nodes where we have it enabled.  In our case, vxrd runs everywhere we have a VTEP (leafs and exit). Then the service nodes (vxsnd) is running on both spines.  We'll want to both stop the service and then also disable it so that it doesn't start again automatically.
 
 Note, we need --become for these commands
 
@@ -273,7 +274,7 @@ Removed symlink /etc/systemd/system/basic.target.wants/vxsnd.service.
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-Repeat these two steps on the VTEP nodes, but remember the service is vxrd here.
+Repeat these two 'stop' and 'disable' steps on the VTEP nodes (leaf/exit), the difference being that it is the *vxrd* here.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'systemctl stop vxrd.service' --become
@@ -302,7 +303,9 @@ cumulus@oob-mgmt-server:~/lnv-to-evpn$
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net commit'
 ```
 
-This will return a fairly significant amount of output from each node showing the diff of the config files where the NCLU changes are being applied.  NCLU is also restarting services and applying interface changes as necessary.
+This commit will return a fairly significant amount of output from each node returning the diff of the config files where the NCLU changes are being applied.  NCLU is also restarting services and applying interface changes as necessary.
+
+This is the moment where BGP will restart and interfaces will be reloaded to apply configuration changes (specifically the bridge learning change).  
 
 7. Verify
 
