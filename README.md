@@ -31,7 +31,7 @@ After cloning (or downloading/extracting the .zip), change into the new director
     vagrant up oob-mgmt-server oob-mgmt-switch
     vagrant up
 
-### Logging in
+## Logging in
 Once Vagrant has finished all of its provisioning, log into the oob-mgmt-server.  We'll be able to use ansible from the oob-mgmt-server to setup the rest of the demo and be able to jump into the other nodes in the topology from here.
 
 ```
@@ -52,7 +52,7 @@ $ vagrant ssh oob-mgmt-server
 ############################################################################
 cumulus@oob-mgmt-server:~$
 ```
-### Setting up the demo
+## Setting up the demo
 After logging into the oob-mgmt-server, change directories to the 'lnv-to-evpn' folder.  From there, run the ansible playbook named run_demo.yml
 
 ```
@@ -66,7 +66,7 @@ TASK [Gathering Facts] *********************************************************
 
 This playbook will configure the baseline reference topology to what is described and illustrated at the top of this guide. 
 
-### Checking the LNV Environment
+## Checking the LNV Environment
 
 After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology.  Lets run a few commands to generate some traffic and to illustrate the topology.  First, lets run a traceroute from server01 to server04 that is in the other subnet and also in the other rack.  Success here means both routing is functional bi-directionally, as is VXLAN encap/decap and bridging.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
 
@@ -152,7 +152,7 @@ untagged  bridge  vni-24     6e:76:b8:14:da:2b              permanent         00
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-### Performing the migration
+## Performing the migration
 
 We'll perform this upgrade step by step using NCLU and ad hoc ansible commands.  We have already defined a set of useful device groups in the ansible hosts file.  We have some divergence in the configuration tasks between the LNV VTEP clients (leaf/exit) and the LNV Service nodes (spine) then also the exit nodes where we perform all routing.  In this method of procedure, we'll want to have three different groups of hosts defined in /etc/ansible/hosts to make the work as quick and efficient as possible.
 
