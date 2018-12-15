@@ -297,7 +297,7 @@ Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-6. Commit the changes
+5. Commit the changes
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net commit'
@@ -307,7 +307,7 @@ This commit will return a fairly significant amount of output from each node ret
 
 This is the moment where BGP will restart and interfaces will be reloaded to apply configuration changes (specifically the bridge learning change).  
 
-7. Verify
+6. Verify
 
 - Check that LNV is disabled.  'net show lnv' should return blank output.  Compare this output against the output from earlier on when LNV was enabled and functional.
 
