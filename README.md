@@ -202,7 +202,7 @@ leaf04 | SUCCESS | rc=0 >>
 exit02 | SUCCESS | rc=0 >>
 ```
 
-Then repeat those steps for the spines.  Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
+2. Then repeat those steps for the spines.  Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'net add bgp l2vpn evpn neighbor swp1-4 activate'
@@ -222,7 +222,7 @@ spine01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-Now lets stage the configuration change to disable bridge learning on all of the VTEP interfaces.
+3. Now lets stage the configuration change to disable bridge learning on all of the VTEP interfaces.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add vxlan vni-13 bridge learning off'
@@ -266,7 +266,7 @@ exit02 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-Next we want to disable and stop the LNV service on all of the nodes where we have it enabled.  In our case, vxrd runs everywhere we have a VTEP (leafs and exit). Then the service nodes (vxsnd) is running on both spines.  We'll want to both stop it and also disable it so that it doesn't start again at reboot.
+4. Next we want to disable and stop the LNV service on all of the nodes where we have it enabled.  In our case, vxrd runs everywhere we have a VTEP (leafs and exit). Then the service nodes (vxsnd) is running on both spines.  We'll want to both stop it and also disable it so that it doesn't start again at reboot.
 
 Note, we need --become for these commands
 
@@ -332,6 +332,9 @@ Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
+6. Commit the changes
+
+7. Verify
 
 
 ---
