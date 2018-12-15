@@ -154,12 +154,13 @@ cumulus@oob-mgmt-server:~/lnv-to-evpn$
 
 ### Performing the migration
 
-We'll perform this upgrade step by step using NCLU and ad hoc ansible commands.  We have already defined a set of useful device groups in the ansible hosts file.  We have some divergence in the configuration tasks between the LNV VTEP clients (leaf/exit) and the LNV Service nodes (spine).  Due to this, it makes sense to have two groups for ansible to use.  One being the LNV VTEP clients (using the vxrd service) and the other bring the LNV Service nodes (using the vxsnd service).  In our demo, we have two groups, "vtep" and "spine" that we'll be using.
+We'll perform this upgrade step by step using NCLU and ad hoc ansible commands.  We have already defined a set of useful device groups in the ansible hosts file.  We have some divergence in the configuration tasks between the LNV VTEP clients (leaf/exit) and the LNV Service nodes (spine) then also the exit nodes where we perform all routing.  In this method of procedure, we'll want to have three different groups of hosts defined in /etc/ansible/hosts to make the work as quick and efficient as possible.
 
-vtep - leaf01, leaf02, leaf03, leaf04, exit01, exit02<br>
-spine - spine01, spine02
+vtep] - leaf01, leaf02, leaf03, leaf04, exit01, exit02<br>
+spine - spine01, spine02<br>
+exit - exit01, exit02
 
-1. First lets activate the l2vpn evpn address family setup for all of our neighbors.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  It's only really two things. One, activate the l2vpn evpn address family for each/all neighbors. Then, enable advertise-all-vni.
+1. First we'll deploy the necessary BGP configuration.  This will start with activating the l2vpn evpn address family for all of our existing neighbors.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  This is two short steps. One, activate the l2vpn evpn address family for each/all neighbors. Then, enable advertise-all-vni.
 
 Remember, these NCLU changes won't take effect until we issue the 'net commit' at a later step.
 
@@ -201,6 +202,18 @@ spine02 | SUCCESS | rc=0 >>
 
 
 spine01 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/lnv-to-evpn$
+```
+
+We also have a situation unique to the exit leafs performing routing. For [centralized routing](https://docs.cumulusnetworks.com/display/DOCS/Ethernet+Virtual+Private+Network+-+EVPN#EthernetVirtualPrivateNetwork-EVPN-centralizedCentralizedRouting) we must also configure `advertise-default-gw` for the l2vpn evpn address family on those nodes.  This ensures that the exit/routing nodes advertise the SVI   So for exit01 and exit02, we'll need to:
+
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible exit -a 'net add bgp l2vpn evpn advertise-default-gw'
+exit01 | SUCCESS | rc=0 >>
+
+exit02 | SUCCESS | rc=0 >>
 
 
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
