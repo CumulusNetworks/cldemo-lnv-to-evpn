@@ -219,7 +219,7 @@ exit02 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-### 2. The next step will be to disable bridge learning on all of the VXLAN VTEP interfaces (leafs/exit):
+### 2. Then disable bridge learning on all of the VXLAN VTEP interfaces (leafs/exit):
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add vxlan vni-13 bridge learning off'
@@ -241,7 +241,7 @@ leaf01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-### 3. Then we will remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). We want to remove the vxrd-src-ip and vxrd-svcnode-ip configuration.
+### 3. Next, remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). This includes removing the vxrd-src-ip and vxrd-svcnode-ip configuration.
 
 ```
 cumulus@oob-mgmt-server:~$ ansible vtep -a 'net del loopback lo vxrd-src-ip'
@@ -265,9 +265,9 @@ cumulus@oob-mgmt-server:~$
 
 ```
 
-### 4. Before we 'net commit' our changes that will enable EVPN, we need to disable and stop the LNV service on all of the nodes where we have it enabled.  In our case, vxrd runs everywhere we have a VTEP (leafs and exit). Then the service nodes (vxsnd) is running on both spines.  We'll want to both stop the service and then also disable it so that it doesn't start again automatically.
+### 4. Prior to issuing a 'net commit' and applying these changes, we need to disable and stop the LNV service on all of the nodes where it is enabled.  This means we need to stop both the vxrd and vxsnd services and then also disable them so that they do not attempt to start again automatically.
 
-Note, we need --become for these commands
+Notice, we need *--become* for these commands
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'systemctl stop vxsnd.service' --become
