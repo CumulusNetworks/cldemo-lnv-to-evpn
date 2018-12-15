@@ -22,7 +22,7 @@ For more information about the reference topology and other demos based on this 
 5. Perform the migration to BGP EVPN
 6. Verification
 
-### Deploy the Topology
+## Deploy the Topology
 
 After cloning (or downloading/extracting the .zip), change into the new directory named "cldemo-lnv-to-evpn." From there, bring up the oob-mgmt-server and oob-mgmt-switch first.  Brining the oob-mgmt devices up first helps make sure that the DHCP server on the oob-mgmt-server is up and reliably ready to hand out IP addresses to the rest of the network when we provision it all with the last step, 'vagrant up'
 
