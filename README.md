@@ -25,7 +25,7 @@ For more information about the reference topology and other demos based on this 
 
 ## Deploy the Topology
 
-After cloning (or downloading/extracting the .zip), change into the new directory named "cldemo-lnv-to-evpn." From there, bring up the oob-mgmt-server and oob-mgmt-switch first.  Brining the oob-mgmt devices up first helps make sure that the DHCP server on the oob-mgmt-server is up and reliably ready to hand out IP addresses to the rest of the network when we provision it all with the last step, 'vagrant up'
+After cloning (or downloading/extracting the .zip), change into the new directory named cldemo-lnv-to-evpn. From there, bring up the oob-mgmt-server and oob-mgmt-switch first.  Bringing the oob-mgmt devices up first helps make sure that the DHCP server on the oob-mgmt-server is up and is ready to hand out IP addresses to the rest of the network when it is provisioned with the last step, 'vagrant up'
 
     git clone https://github.com/cumulusnetworks/cldemo-lnv-to-evpn
     cd cldemo-lnv-to-evpn
@@ -33,7 +33,7 @@ After cloning (or downloading/extracting the .zip), change into the new director
     vagrant up
 
 ## Logging in
-Once Vagrant has finished all of its provisioning, log into the oob-mgmt-server.  We'll be able to use ansible from the oob-mgmt-server to setup the rest of the demo and be able to jump into the other nodes in the topology from here.
+Once Vagrant has finished provisioning the topology, ssh into the oob-mgmt-server. This is our central point of management.  We'll use ansible here and can also jump to any other server in the topology using the oob-mgmt network.
 
 ```
 $ vagrant ssh oob-mgmt-server
@@ -54,7 +54,7 @@ $ vagrant ssh oob-mgmt-server
 cumulus@oob-mgmt-server:~$
 ```
 ## Setting up the demo
-After logging into the oob-mgmt-server, change directories to the 'lnv-to-evpn' folder.  From there, run the ansible playbook named run_demo.yml
+After logging into the oob-mgmt-server, change directories to the lnv-to-evpn folder.  Then, run the ansible playbook named run_demo.yml
 
 ```
 cumulus@oob-mgmt-server:~$cd lnv-to-evpn
@@ -65,11 +65,11 @@ PLAY [host] ********************************************************************
 TASK [Gathering Facts] **************************************************************************************************************************************************
 ```
 
-This playbook will configure the baseline reference topology to what is described and illustrated at the top of this guide. 
+This playbook will configure the baseline reference topology to our LNV enabled starting point as described in the introduction.
 
 ## Checking the LNV Environment
 
-After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology.  Lets run a few commands to generate some traffic and to illustrate the topology.  First, lets run a traceroute from server01 to server04 that is in the other subnet and also in the other rack.  Success here means both routing is functional bi-directionally, as is VXLAN encap/decap and bridging.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
+After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology. To get started, we will run a few commands to generate some traffic and to illustrate the topology.  First, lets run a traceroute from server01 to server04.  Server04 is a server that is in the other subnet and also in the other rack.  A successful traceroute here means both routing is functional bi-directionally, as is VXLAN encap/decap and bridging.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
 
 ```
 cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
@@ -81,7 +81,7 @@ traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
 cumulus@oob-mgmt-server:~$
 ```
 
-Next, lets confirm that LNV is running and   Again, we can use ansible to run an NCLU command on all of the network nodes at the same time.
+Next, lets confirm that LNV is running.  Again, we can use ansible to run an NCLU command on all of the network nodes at the same time.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show lnv'
@@ -111,9 +111,9 @@ spine01 | SUCCESS | rc=0 >>
        10.0.0.40       90
 <snip>
 ```
-The output from the ad hoc ansible command will be separated by host.  Look for lines similar to this, `spine01 | SUCCESS | rc=0 >>`. You should see that the spines are **LNV Role: Service Node** and leafs/exit are **LNV Role: VTEP**. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's *clagd-vxlan-anycast-ip* address and not it's primary loopback address.
+The output from the ad hoc ansible command will be separated by host.  Look for lines similar to this, `spine01 | SUCCESS | rc=0 >>` as the demarcation between device outputs. You should see that the spines are **LNV Role: Service Node** and leafs/exit are **LNV Role: VTEP**. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's *clagd-vxlan-anycast-ip* address and not it's primary loopback address.
 
-Lastly, lets take a look at a bridge mac address table on one of the leafs that has both VXLAN VTEPs.  Your MAC addresses may differ from this example.  Notice that the linux bridge also learns the source VTEP IP address (TunnelDest) for MAC addresses that exist behind other VTEPs. 
+Lastly, lets take a look at a bridge mac address table on one of the leafs that has both VXLAN VTEPs. Your MAC addresses may differ from this example.  Notice that the linux bridge also learns the source VTEP IP address (TunnelDest) for MAC addresses that exist behind other VTEPs. 
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible leaf01 -a 'net show bridge macs'
@@ -505,7 +505,7 @@ untagged  bridge  vni-24     22:d1:d8:ee:5a:8a              permanent           
 
 ## Cleanup
 
-On Spines, /etc/vxsnd.conf needs lines commented out.
+On Spines, where vxsnd was running, the file /etc/vxsnd.conf needs lines commented out to complete the migration.
 
 1. src_ip =
 2. svcnode_peers =
