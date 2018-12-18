@@ -21,6 +21,7 @@ For more information about the reference topology and other demos based on this 
 4. Inspect the LNV Environment
 5. Perform the migration to BGP EVPN
 6. Verification
+7. Cleanup
 
 ## Deploy the Topology
 
