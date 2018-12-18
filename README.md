@@ -503,6 +503,15 @@ untagged  bridge  vni-13     1a:68:e2:54:b1:50              permanent           
 untagged  bridge  vni-24     22:d1:d8:ee:5a:8a              permanent                 00:09:56
 ```
 
+## Cleanup
+
+On Spines, /etc/vxsnd.conf needs lines commented out.
+
+1. src_ip =
+2. svcnode_peers =
+3. svcnode_ip =
+
+
 ---
 
 >©2018 Cumulus Networks. CUMULUS, the Cumulus Logo, CUMULUS NETWORKS, and the Rocket Turtle Logo 
