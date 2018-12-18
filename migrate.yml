@@ -79,7 +79,7 @@
       lineinfile:
         path: /etc/vxsnd.conf
         regexp: "^svcnode_peers =" 
-        line: "svcnode_peers ="
+        line: "#svcnode_peers ="
          
         
           
