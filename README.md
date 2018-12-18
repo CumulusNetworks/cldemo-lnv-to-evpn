@@ -266,49 +266,36 @@ cumulus@oob-mgmt-server:~$
 
 ```
 
-### 4. Prior to issuing a 'net commit' and applying these changes, we need to disable and stop the LNV service on all of the nodes where it is enabled.  This means we need to stop both the vxrd and vxsnd services and then also disable them so that they do not attempt to start again automatically.
+### 4. Prior to issuing a 'net commit' and applying these changes, we need to disable and stop the LNV service on all of the nodes where it is enabled.  This means we need to stop both the vxrd and vxsnd services and then also disable them so that they do not attempt to start again automatically.  Ansible's service module can handle both disabling and stopping the service with one command.
 
-Notice, we need *--become* for these commands
-
-```
-cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'systemctl stop vxsnd.service' --become
-spine01 | SUCCESS | rc=0 >>
-
-
-spine02 | SUCCESS | rc=0 >>
-
-
-cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'systemctl disable vxsnd.service' --become
-spine01 | SUCCESS | rc=0 >>
-Removed symlink /etc/systemd/system/basic.target.wants/vxsnd.service.
-
-spine02 | SUCCESS | rc=0 >>
-Removed symlink /etc/systemd/system/basic.target.wants/vxsnd.service.
-
-cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
-```
-
-Repeat these two 'stop' and 'disable' steps on the VTEP nodes (leaf/exit), the difference being that it is the *vxrd* here.
+Notice, we need *--become* for these commands.  
 
 ```
-cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'systemctl stop vxrd.service' --become
-leaf01 | SUCCESS | rc=0 >>
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -m service -a 'name=vxsnd enabled=no state=stopped' --become
+spine02 | SUCCESS => {
+    "changed": true, 
+    "enabled": false, 
+    "failed": false, 
+    "name": "vxsnd", 
+    "state": "stopped", 
+    "status": {
+        "ActiveEnterTimestamp": "Tue 2018-12-18 20:53:18 UTC", 
+<snip>        
+```
 
+Repeat this step on the VTEP nodes (leaf/exit), the only difference being that it is the *vxrd* service here.
 
-leaf02 | SUCCESS | rc=0 >>
-
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -m service -a 'name=vxrd enabled=no state=stopped' --become
+leaf01 | SUCCESS => {
+    "changed": true, 
+    "enabled": false, 
+    "failed": false, 
+    "name": "vxrd", 
+    "state": "stopped", 
+    "status": {
+        "ActiveEnterTimestamp": "Tue 2018-12-18 20:53:21 UTC", 
 <snip>
-
-cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'systemctl disable vxrd.service' --become
-leaf01 | SUCCESS | rc=0 >>
-Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
-
-exit01 | SUCCESS | rc=0 >>
-Removed symlink /etc/systemd/system/basic.target.wants/vxrd.service.
-
-<snip>
-
-cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
 ### 5. Commit the changes
