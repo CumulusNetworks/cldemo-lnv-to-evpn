@@ -458,6 +458,50 @@ After type-2 and type-3 routes are learned through BGP, this information has to 
 
 We should see the information from the BGP EVPN routes be populated as described above into the bridge table.
 
+```
+cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible leaf01 -a 'net show bridge macs'
+leaf01 | SUCCESS | rc=0 >>
+
+VLAN      Master  Interface  MAC                TunnelDest  State      Flags          LastSeen
+--------  ------  ---------  -----------------  ----------  ---------  -------------  --------
+13        bridge  bond01     02:03:00:11:11:01                                        00:00:23
+13        bridge  bond01     02:03:00:11:11:02                                        00:00:52
+13        bridge  vni-13     02:03:00:33:33:01                         offload        00:09:37
+13        bridge  vni-13     02:03:00:33:33:02                         offload        00:09:39
+13        bridge  vni-13     44:38:39:00:00:0c              static                    00:09:50
+13        bridge  vni-13     44:38:39:00:00:4b              static                    00:09:50
+13        bridge  vni-13     44:39:39:ff:00:13              static                    00:09:50
+13        bridge  vni-13     46:38:39:00:00:0b                         offload        00:09:39
+13        bridge  vni-13     46:38:39:00:00:4a                         offload        00:09:36
+24        bridge  bond02     02:03:00:22:22:01                                        00:00:23
+24        bridge  bond02     02:03:00:22:22:02                                        00:00:52
+24        bridge  vni-24     02:03:00:44:44:01                         offload        00:09:37
+24        bridge  vni-24     02:03:00:44:44:02                         offload        00:09:40
+24        bridge  vni-24     44:38:39:00:00:0c              static                    00:09:50
+24        bridge  vni-24     44:38:39:00:00:4b              static                    00:09:50
+24        bridge  vni-24     44:39:39:ff:00:24              static                    00:09:50
+untagged          vni-13     00:00:00:00:00:00  10.0.0.40   permanent  self           00:09:50 <- Type 3 Route
+untagged          vni-13     00:00:00:00:00:00  10.0.0.101  permanent  self           00:09:50 <- Type 3 Route
+untagged          vni-13     02:03:00:33:33:01  10.0.0.101             self, offload  00:09:37
+untagged          vni-13     02:03:00:33:33:02  10.0.0.101             self, offload  00:09:39
+untagged          vni-13     44:38:39:00:00:0c  10.0.0.40   static     self           00:09:50
+untagged          vni-13     44:38:39:00:00:4b  10.0.0.40   static     self           00:09:50
+untagged          vni-13     44:39:39:ff:00:13  10.0.0.40   static     self           00:09:50 <- Type 3 Route (advertise-default-gw)
+untagged          vni-13     46:38:39:00:00:0b  10.0.0.40              self, offload  00:09:39
+untagged          vni-13     46:38:39:00:00:4a  10.0.0.40              self, offload  00:09:36
+untagged          vni-24     00:00:00:00:00:00  10.0.0.40   permanent  self           00:09:50 <- Type 3 Route
+untagged          vni-24     00:00:00:00:00:00  10.0.0.101  permanent  self           00:09:50 <- Type 3 Route
+untagged          vni-24     02:03:00:44:44:01  10.0.0.101             self, offload  00:09:37
+untagged          vni-24     02:03:00:44:44:02  10.0.0.101             self, offload  00:09:40
+untagged          vni-24     44:38:39:00:00:0c  10.0.0.40   static     self           00:09:50
+untagged          vni-24     44:38:39:00:00:4b  10.0.0.40   static     self           00:09:50
+untagged          vni-24     44:39:39:ff:00:24  10.0.0.40   static     self           00:09:50 <- Type 3 Route (advertise-default-gw)
+untagged  bridge  bond01     44:38:39:00:00:03              permanent                 00:09:56
+untagged  bridge  bond02     44:38:39:00:00:14              permanent                 00:09:56
+untagged  bridge  peerlink   44:38:39:00:00:10              permanent                 00:09:56
+untagged  bridge  vni-13     1a:68:e2:54:b1:50              permanent                 00:09:56
+untagged  bridge  vni-24     22:d1:d8:ee:5a:8a              permanent                 00:09:56
+```
 
 ---
 
