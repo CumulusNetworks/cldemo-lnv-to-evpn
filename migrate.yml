@@ -56,9 +56,31 @@
 - hosts: network
   become: yes
   tasks:
-    - name: Commit & Apply all changes
+    - name: Commit & apply all changes
       nclu:
         commit: true
+
+- hosts: spine
+  become: yes
+  tasks:
+    - name: Cleanup vxsnd.conf file
+      lineinfile:
+        path: /etc/vxsnd.conf
+        regexp: "^svcnode_ip ="
+        line: "#svcnode_ip ="
+        
+    - name: cleanup vxsnd.conf
+      lineinfile:
+        path: /etc/vxsnd.conf
+        regexp: "^src_ip ="
+        line: "#src_ip ="
+
+    - name: Configure vxsnd.conf
+      lineinfile:
+        path: /etc/vxsnd.conf
+        regexp: "^svcnode_peers =" 
+        line: "svcnode_peers ="
+         
         
           
 
