@@ -479,7 +479,7 @@ VLAN      Master  Interface  MAC                TunnelDest  State      Flags    
 24        bridge  vni-24     02:03:00:44:44:02                         offload        00:09:40
 24        bridge  vni-24     44:38:39:00:00:0c              static                    00:09:50
 24        bridge  vni-24     44:38:39:00:00:4b              static                    00:09:50
-24        bridge  vni-24     44:39:39:ff:00:24              static                    00:09:50
+24        bridge  vni-24     44:39:39:ff:00:24              static                    00:09:50 
 untagged          vni-13     00:00:00:00:00:00  10.0.0.40   permanent  self           00:09:50 <- Type 3 Route
 untagged          vni-13     00:00:00:00:00:00  10.0.0.101  permanent  self           00:09:50 <- Type 3 Route
 untagged          vni-13     02:03:00:33:33:01  10.0.0.101             self, offload  00:09:37
