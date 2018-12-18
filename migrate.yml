@@ -1,0 +1,67 @@
+---
+- hosts: vtep
+  become: yes
+  tasks:
+    - name: Activate BGP L2VPN EVPN address family
+      nclu:
+        commands:
+          - add bgp l2vpn evpn neighbor swp51-52 activate
+          
+    - name: Configure advertise-all-vni
+      nclu:
+        commands:
+          - add bgp l2vpn evpn advertise-all-vni
+          
+    - name: Disable bridge learning on VTEP interfaces
+      nclu:
+        commands:         
+          - add vxlan vni-13 bridge learning off
+          - add vxlan vni-24 bridge learning off
+        
+    - name: Remove LNV configuration on loopback interfaces
+      nclu:
+        commands:        
+          - del loopback lo vxrd-src-ip
+          - del loopback lo vxrd-svcnode-ip
+          
+    - name: Stop and Disable LNV registration daemon vxrd
+      service:  
+        name: vxrd
+        state: stopped
+        enabled: no
+       
+- hosts: exit
+  become: yes
+  tasks:
+    - name: Configure routing leafs to advertise their SVIs
+      nclu:
+        commands:
+          - add bgp l2vpn evpn advertise-default-gw
+ 
+- hosts: spine
+  become: yes
+  tasks:
+    - name: Activate BGP L2VPN EVPN address family
+      nclu:
+        commands:
+          - add bgp l2vpn evpn neighbor swp1-4 activate
+          - add bgp l2vpn evpn neighbor swp29-30 activate
+          
+    - name: Stop and Disable LNV registration daemon vxsnd
+      service:  
+        name: vxsnd
+        state: stopped
+        enabled: no
+        
+- hosts: network
+  become: yes
+  tasks:
+    - name: Commit & Apply all changes
+      nclu:
+        commit: true
+        
+          
+
+          
+   
+          
