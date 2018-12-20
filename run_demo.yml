@@ -80,7 +80,7 @@
       async: 1
       poll: 0
 
-- hosts: network
+- hosts: internet
   tasks:
     - name: Pause to ensure networking reload completes
       pause:
