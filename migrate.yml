@@ -1,4 +1,6 @@
 ---
+#
+# This could all be one task to push all NCLU at once
 - hosts: vtep
   become: yes
   tasks:
@@ -23,17 +25,11 @@
         commands:        
           - del loopback lo vxrd-src-ip
           - del loopback lo vxrd-svcnode-ip
-          
-    - name: Stop and Disable LNV registration daemon vxrd
-      service:  
-        name: vxrd
-        state: stopped
-        enabled: no
-       
+                 
 - hosts: exit
   become: yes
   tasks:
-    - name: Configure routing leafs to advertise their SVIs
+    - name: Configure exit/routing nodes to advertise gateway
       nclu:
         commands:
           - add bgp l2vpn evpn advertise-default-gw
@@ -47,11 +43,11 @@
           - add bgp l2vpn evpn neighbor swp1-4 activate
           - add bgp l2vpn evpn neighbor swp29-30 activate
           
-    - name: Stop and Disable LNV registration daemon vxsnd
-      service:  
-        name: vxsnd
-        state: stopped
-        enabled: no
+    - name: Remove LNV configuration on loopback interfaces
+      nclu:
+        commands:        
+          - del lnv service-node anycast-ip 10.0.0.200
+          - del lnv service-node source {{ ansible_lo.ipv4_secondaries[0].address }}
         
 - hosts: network
   become: yes
@@ -59,27 +55,6 @@
     - name: Commit & apply all changes
       nclu:
         commit: true
-
-- hosts: spine
-  become: yes
-  tasks:
-    - name: Cleanup vxsnd.conf file
-      lineinfile:
-        path: /etc/vxsnd.conf
-        regexp: "^svcnode_ip ="
-        line: "#svcnode_ip ="
-        
-    - name: cleanup vxsnd.conf
-      lineinfile:
-        path: /etc/vxsnd.conf
-        regexp: "^src_ip ="
-        line: "#src_ip ="
-
-    - name: Configure vxsnd.conf
-      lineinfile:
-        path: /etc/vxsnd.conf
-        regexp: "^svcnode_peers =" 
-        line: "#svcnode_peers ="
          
         
           
