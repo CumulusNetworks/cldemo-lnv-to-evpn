@@ -48,17 +48,28 @@
         commands:        
           - del lnv service-node anycast-ip 10.0.0.200
           - del lnv service-node source {{ ansible_lo.ipv4_secondaries[0].address }}
+          
+- hosts: vtep
+  become: yes
+  tasks:       
+    - name: Stop and Disable LNV Client (vxrd)
+      service:
+        name: vxrd
+        enabled: no
+        state: stopped
         
+- hosts: spine
+  become: yes
+  tasks:       
+    - name: Stop and Disable LNV Service Node Daemon (vxsnd)
+      service:
+        name: vxsnd
+        enabled: no
+        state: stopped
+                 
 - hosts: network
   become: yes
   tasks:
     - name: Commit & apply all changes
       nclu:
         commit: true
-         
-        
-          
-
-          
-   
-          
