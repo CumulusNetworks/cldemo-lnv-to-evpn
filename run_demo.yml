@@ -80,7 +80,7 @@
       async: 1
       poll: 0
 
-- hosts: internet
+- hosts: oob-switch
   tasks:
     - name: Pause to ensure networking reload completes
       pause:
