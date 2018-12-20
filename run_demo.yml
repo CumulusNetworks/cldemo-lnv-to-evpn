@@ -76,15 +76,15 @@
         state: reloaded
         
     - name: apply interface changes
-      shell: ifreload -a
-      #async: 1
-     #poll: 0
+      shell: sleep 3 && systemctl restart networking
+      async: 1
+      poll: 0
 
-#- hosts: network
-#  tasks:
-#    - name: Pause to ensure networking reload completes
-#      pause:
-#        seconds: 10
+- hosts: network
+  tasks:
+    - name: Pause to ensure networking reload completes
+      pause:
+        seconds: 10
       
 - hosts: spine
   become: yes
