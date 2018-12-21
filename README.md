@@ -13,7 +13,7 @@ Need to also link to the companion whitepaper:
 
 For more information about the reference topology and other demos based on this topology, head over to: https://github.com/CumulusNetworks/cldemo-vagrant
 
-## Outline
+## Table of Contents
 
 1. [Deploy the topology](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#deploy-the-topology)
 2. [Logging in](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#deploy-the-topology)
