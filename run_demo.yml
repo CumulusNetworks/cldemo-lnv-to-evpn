@@ -80,11 +80,11 @@
       async: 1
       poll: 0
 
-- hosts: oob-switch
+- hosts: localhost
   tasks:
     - name: Pause to ensure networking reload completes
       pause:
-        seconds: 5
+        seconds: 10
       
 - hosts: spine
   become: yes
