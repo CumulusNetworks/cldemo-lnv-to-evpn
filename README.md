@@ -3,15 +3,15 @@
 
 Welcome to the Cumulus Linux LNV to EVPN Migration demo. Using the [Cumulus reference topology](https://github.com/CumulusNetworks/cldemo-vagrant), this demo will walk through the steps to migrate your LNV controlled VXLAN to the de facto standard using BGP EVPN.  LNV (the vxfld package) will be depricated in Cumulus Linux 4.x in favor of using EVPN to manage VXLAN overlays.
 
-This demo will start you with an LNV controlled VXLAN topology, then step through the process of converting to EVPN using BGP. One way will be through using ad-hoc ansible commands and NCLU.  The other way will be through an Ansible playbook that directly changes the config files and restarts the associated services.  Below are a few additional notes and details of this topology:
+This demo will start you with an LNV controlled VXLAN topology, then step through the process of converting to EVPN using BGP using ad-hoc ansible commands and NCLU.  An Ansible playbook is also provided to perform the same procedure named [migrate.yml](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/lnv-to-evpn/migrate.yml). Below are a few additional notes and details of this topology:
 
-1. Using a [centralized routing](https://cumulusnetworks.com/blog/vxlan-designs-part-1/) model. Routing between VXLANs is done at the exit leafs.  The leaf switches exit01 and exit02 have the SVIs and provide the first hop redundancy.
+1. This uses a [centralized routing](https://cumulusnetworks.com/blog/vxlan-designs-part-1/) model. Routing between VXLANs is done at the exit leafs.  The leaf switches exit01 and exit02 have the SVIs and provide the first hop redundancy.
 2. VXLAN is in [active-active mode](https://docs.cumulusnetworks.com/display/DOCS/LNV+VXLAN+Active-Active+Mode) on the MLAG enabled leafs.  The leaf switches are in pairs to provide an MLAG bond to the servers (simulating a rack).  Inbound VXLAN traffic from the rest of the fabric to the pair is addressed to the [clagd-vxlan-anycast-ip](https://docs.cumulusnetworks.com/display/DOCS/LNV+VXLAN+Active-Active+Mode#LNVVXLANActive-ActiveMode-anycastConfiguretheAnycastIPAddress) IP address.  We'll see this clagd-vxlan-anycast-ip address instead of the individual loopbacks when looking at some LNV and BGP EVPN output
 3. The LNV Service Nodes (vxsnd) are running in [anycast mode](https://docs.cumulusnetworks.com/display/DOCS/Lightweight+Network+Virtualization+Overview#LightweightNetworkVirtualizationOverview-ScaleLNVbyLoadBalancingwithAnycast) on both spine01 and spine02.
 
 Need to also link to the companion whitepaper:
 
-For more information about the reference topology and other demos based on this topology, head on over to: https://github.com/CumulusNetworks/cldemo-vagrant
+For more information about the reference topology and other demos based on this topology, head over to: https://github.com/CumulusNetworks/cldemo-vagrant
 
 ## Outline
 
@@ -21,7 +21,6 @@ For more information about the reference topology and other demos based on this 
 4. [Examine the LNV Environment](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#setting-up-the-demo)
 5. [Perform the migration to BGP EVPN](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#performing-the-migration)
 6. [Verification](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#verification)
-7. [Cleanup]
 
 ## Deploy the Topology
 
@@ -490,13 +489,6 @@ untagged  bridge  vni-13     1a:68:e2:54:b1:50              permanent           
 untagged  bridge  vni-24     22:d1:d8:ee:5a:8a              permanent                 00:09:56
 ```
 
-## Cleanup
-
-On Spines, where vxsnd was running, the file /etc/vxsnd.conf needs lines commented out to complete the migration.
-
-1. src_ip =
-2. svcnode_peers =
-3. svcnode_ip =
 
 
 ---
