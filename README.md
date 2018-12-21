@@ -16,8 +16,8 @@ For more information about the reference topology and other demos based on this 
 ## Outline
 
 1. [Deploy the topology](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#deploy-the-topology)
-2. [Log into the oob-mgmt-server](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#deploy-the-topology)
-3. [Run Ansible playbook run_demo.yml to setup the LNV scenario](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#setting-up-the-demo)
+2. [Logging in](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#deploy-the-topology)
+3. [Setup the Demo](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#setting-up-the-demo)
 4. [Examine the LNV Environment](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#setting-up-the-demo)
 5. Perform the migration to BGP EVPN
 6. Verification
