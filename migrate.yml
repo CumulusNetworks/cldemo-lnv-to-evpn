@@ -43,12 +43,20 @@
           - add bgp l2vpn evpn neighbor swp1-4 activate
           - add bgp l2vpn evpn neighbor swp29-30 activate
           
-    - name: Remove LNV configuration on loopback interfaces
+    - name: Remove LNV Service Node configuration
       nclu:
         commands:        
           - del lnv service-node anycast-ip 10.0.0.200
           - del lnv service-node source {{ ansible_lo.ipv4_secondaries[0].address }}
           
+    - name: Remove Unused LNV Anycast Address
+      nclu:
+        commands:        
+          - del loopback lo ip address 10.0.0.200/32
+          - del bgp ipv4 unicast network 10.0.0.200/32         
+    
+#### We have to manually stop and disable vxrd at minimum.  
+## NCLU does not currently support disabling/stopping vxrd      
 - hosts: vtep
   become: yes
   tasks:       
@@ -57,7 +65,7 @@
         name: vxrd
         enabled: no
         state: stopped
-        
+           
 - hosts: spine
   become: yes
   tasks:       
