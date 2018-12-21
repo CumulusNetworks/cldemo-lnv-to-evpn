@@ -294,7 +294,7 @@ cumulus@oob-mgmt-server:~$
 ```
 ansible spine -a 'net del lnv service-node anycast-ip 10.0.0.200'
 ansible spine01 -a 'net del lnv service-node source 10.0.0.21'
-ansible spine01 -a 'net del lnv service-node source 10.0.0.22'
+ansible spine02 -a 'net del lnv service-node source 10.0.0.22'
 ```
 ```
 cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible spine -a 'net del lnv service-node anycast-ip 10.0.0.200'
