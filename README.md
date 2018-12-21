@@ -160,11 +160,17 @@ vtep - leaf01, leaf02, leaf03, leaf04, exit01, exit02<br>
 spine - spine01, spine02<br>
 exit - exit01, exit02
 
-### 1. First we'll deploy the necessary BGP configuration.  This will start with activating the l2vpn evpn address family for all of our existing neighbors.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  This is two short steps. One, activate the l2vpn evpn address family for each/all neighbors. Then, enable advertise-all-vni.
+### 1. First we'll deploy the necessary BGP configuration.  
+This will start with activating the l2vpn evpn address family for all of our existing neighbors.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  This is two short steps. One, activate the l2vpn evpn address family for each/all neighbors. Then, enable advertise-all-vni.
 
 Remember, these NCLU changes won't take effect until we issue the 'net commit' at a later step.
 
 *Note: Repetitive output will be omitted for brevity and indicated by `<snip>`*
+
+```
+ansible vtep -a 'net add bgp l2vpn evpn neighbor swp51-52 activate'
+ansible vtep -a 'net add bgp l2vpn evpn advertise-all-vni'
+```
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add bgp l2vpn evpn neighbor swp51-52 activate'
@@ -190,6 +196,11 @@ cumulus@oob-mgmt-server:~$
 - We have repeat these steps for the spines.  The configuration is slightly different here.  Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
 
 ```
+ansible spine -a 'net add bgp l2vpn evpn neighbor swp1-4 activate'
+ansible spine -a 'net add bgp l2vpn evpn neighbor swp29-30 activate'
+```
+
+```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -a 'net add bgp l2vpn evpn neighbor swp1-4 activate'
 spine01 | SUCCESS | rc=0 >>
 
@@ -210,6 +221,10 @@ cumulus@oob-mgmt-server:~/lnv-to-evpn$
 - We also have a situation unique to the exit leafs performing routing. For [centralized routing](https://docs.cumulusnetworks.com/display/DOCS/Ethernet+Virtual+Private+Network+-+EVPN#EthernetVirtualPrivateNetwork-EVPN-centralizedCentralizedRouting) we must also configure `advertise-default-gw` for the l2vpn evpn address family on those nodes.  This ensures that the exit/routing nodes advertise the SVI   So for exit01 and exit02, we'll need to:
 
 ```
+ansible exit -a 'net add bgp l2vpn evpn advertise-default-gw
+```
+
+```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible exit -a 'net add bgp l2vpn evpn advertise-default-gw'
 exit01 | SUCCESS | rc=0 >>
 
@@ -219,7 +234,12 @@ exit02 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-### 2. Then disable bridge learning on all of the VXLAN VTEP interfaces (leafs/exit):
+### 2. Disable bridge learning on all of the VXLAN VTEP interfaces (leafs/exit):
+
+```
+ansible vtep -a 'net add vxlan vni-13 bridge learning off'
+ansible vtep -a 'net add vxlan vni-24 bridge learning off'
+```
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add vxlan vni-13 bridge learning off'
@@ -241,7 +261,12 @@ leaf01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-### 3. Next, remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). This includes removing the vxrd-src-ip and vxrd-svcnode-ip configuration.
+### 3. Remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). This includes removing the vxrd-src-ip and vxrd-svcnode-ip configuration.
+
+```
+ansible vtep -a 'net del loopback lo vxrd-src-ip'
+ansible vtep -a 'net del loopback lo vxrd-svcnode-ip'
+```
 
 ```
 cumulus@oob-mgmt-server:~$ ansible vtep -a 'net del loopback lo vxrd-src-ip'
@@ -265,9 +290,14 @@ cumulus@oob-mgmt-server:~$
 
 ```
 
-### 4. Prior to issuing a 'net commit' and applying these changes, we need to disable and stop the LNV service on all of the nodes where it is enabled.  This means we need to stop both the vxrd and vxsnd services and then also disable them so that they do not attempt to start again automatically.  Ansible's service module can handle both disabling and stopping the service with one command.
+### 4. Disable and stop the LNV service everywhere
+This means we need to stop both the vxrd and vxsnd services and then also disable them so that they do not attempt to start again automatically.  Ansible's service module can handle both disabling and stopping the service with one command.
 
-Notice, we need *--become* for these commands.  
+Notice, we need *--become* for these commands. 
+```
+ansible spine -m service -a 'name=vxsnd enabled=no state=stopped' --become
+ansible vtep -m service -a 'name=vxrd enabled=no state=stopped' --become
+```
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -m service -a 'name=vxsnd enabled=no state=stopped' --become
@@ -281,9 +311,7 @@ spine02 | SUCCESS => {
         "ActiveEnterTimestamp": "Tue 2018-12-18 20:53:18 UTC", 
 <snip>        
 ```
-
 Repeat this step on the VTEP nodes (leaf/exit), the only difference being that it is the *vxrd* service here.
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -m service -a 'name=vxrd enabled=no state=stopped' --become
 leaf01 | SUCCESS => {
@@ -298,6 +326,9 @@ leaf01 | SUCCESS => {
 ```
 
 ### 5. Commit the changes
+```
+ansible network -a 'net commit'
+```
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net commit'
