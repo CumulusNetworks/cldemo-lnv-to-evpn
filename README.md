@@ -473,7 +473,10 @@ In this working example from looking at spine01, we can see that we have all 6 a
 
 ### 3. Generate Some Test Traffic
 
-Repeat the traceroute from earlier `ansible server01 -a 'traceroute -n 10.2.4.104`.
+Repeat the traceroute from earlier
+```
+ansible server01 -a 'traceroute -n 10.2.4.104'
+```
 
 ```
 cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
@@ -488,9 +491,12 @@ cumulus@oob-mgmt-server:~$
 ### 4. Check the BGP EVPN Type-2 and Type-3 routes
 
 The traceroute above should ensure that the linux bridges have learned the MAC addresses of at least server01, server04 and the mac addresses of the SVIs performing routing at the exit nodes.  This information should be redistibuted into BGP as routes in the EVPN address family.  We can inspect these type-2 (MAC to IP) routes and type-3 (VTEP VXLAN tunnel interface IP) routes by checking 'net show bgp evpn route'
-
 ```
-cumulus@leaf01:mgmt-vrf:~$ net show bgp evpn route
+ansible leaf01 -a 'net show bgp evpn route'
+```
+```
+cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible leaf01 -a 'net show bgp evpn route'
+leaf01 | SUCCESS | rc=0 >>
 BGP table version is 30, local router ID is 10.0.0.11
 Status codes: s suppressed, d damped, h history, * valid, > best, i - internal
 Origin codes: i - IGP, e - EGP, ? - incomplete
@@ -521,6 +527,9 @@ Notice the legend at the top of the command output.  The number in the first bra
 After type-2 and type-3 routes are learned through BGP, this information has to then be installed into the bridge table for traffic forwarding to actually occur.  The type-2 routes contain all of the information that the linux bridge needs to install a learned mac address with its VXLAN tunnel IP adddress into the bridge table.  The type-3 routes are installed as the all 00's entry to indicate a VTEP that needs a replicated copy of a packet for BUM (broadcast unknown unicast and multicast) packet handling.
 
 We should see the information from the BGP EVPN routes be populated as described above into the bridge table.
+```
+ansible leaf01 -a 'net show bridge macs'
+```
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible leaf01 -a 'net show bridge macs'
@@ -530,33 +539,33 @@ VLAN      Master  Interface  MAC                TunnelDest  State      Flags    
 --------  ------  ---------  -----------------  ----------  ---------  -------------  --------
 13        bridge  bond01     02:03:00:11:11:01                                        00:00:23
 13        bridge  bond01     02:03:00:11:11:02                                        00:00:52
-13        bridge  vni-13     02:03:00:33:33:01                         offload        00:09:37
-13        bridge  vni-13     02:03:00:33:33:02                         offload        00:09:39
+13        bridge  vni-13     02:03:00:33:33:01                         offload        00:09:37 <- Type 2 Route
+13        bridge  vni-13     02:03:00:33:33:02                         offload        00:09:39 <- Type 2 Route
 13        bridge  vni-13     44:38:39:00:00:0c              static                    00:09:50
 13        bridge  vni-13     44:38:39:00:00:4b              static                    00:09:50
 13        bridge  vni-13     44:39:39:ff:00:13              static                    00:09:50
-13        bridge  vni-13     46:38:39:00:00:0b                         offload        00:09:39
-13        bridge  vni-13     46:38:39:00:00:4a                         offload        00:09:36
+13        bridge  vni-13     46:38:39:00:00:0b                         offload        00:09:39 <- Type 2 Route
+13        bridge  vni-13     46:38:39:00:00:4a                         offload        00:09:36 <- Type 2 Route
 24        bridge  bond02     02:03:00:22:22:01                                        00:00:23
 24        bridge  bond02     02:03:00:22:22:02                                        00:00:52
-24        bridge  vni-24     02:03:00:44:44:01                         offload        00:09:37
-24        bridge  vni-24     02:03:00:44:44:02                         offload        00:09:40
+24        bridge  vni-24     02:03:00:44:44:01                         offload        00:09:37 <- Type 2 Route
+24        bridge  vni-24     02:03:00:44:44:02                         offload        00:09:40 <- Type 2 Route
 24        bridge  vni-24     44:38:39:00:00:0c              static                    00:09:50
 24        bridge  vni-24     44:38:39:00:00:4b              static                    00:09:50
 24        bridge  vni-24     44:39:39:ff:00:24              static                    00:09:50 
 untagged          vni-13     00:00:00:00:00:00  10.0.0.40   permanent  self           00:09:50 <- Type 3 Route
 untagged          vni-13     00:00:00:00:00:00  10.0.0.101  permanent  self           00:09:50 <- Type 3 Route
-untagged          vni-13     02:03:00:33:33:01  10.0.0.101             self, offload  00:09:37
-untagged          vni-13     02:03:00:33:33:02  10.0.0.101             self, offload  00:09:39
+untagged          vni-13     02:03:00:33:33:01  10.0.0.101             self, offload  00:09:37 <- Type 2 Route
+untagged          vni-13     02:03:00:33:33:02  10.0.0.101             self, offload  00:09:39 <- Type 2 Route
 untagged          vni-13     44:38:39:00:00:0c  10.0.0.40   static     self           00:09:50
 untagged          vni-13     44:38:39:00:00:4b  10.0.0.40   static     self           00:09:50
 untagged          vni-13     44:39:39:ff:00:13  10.0.0.40   static     self           00:09:50 <- Type 3 Route (advertise-default-gw)
-untagged          vni-13     46:38:39:00:00:0b  10.0.0.40              self, offload  00:09:39
-untagged          vni-13     46:38:39:00:00:4a  10.0.0.40              self, offload  00:09:36
+untagged          vni-13     46:38:39:00:00:0b  10.0.0.40              self, offload  00:09:39 <- Type 2 Route
+untagged          vni-13     46:38:39:00:00:4a  10.0.0.40              self, offload  00:09:36 <- Type 2 Route
 untagged          vni-24     00:00:00:00:00:00  10.0.0.40   permanent  self           00:09:50 <- Type 3 Route
 untagged          vni-24     00:00:00:00:00:00  10.0.0.101  permanent  self           00:09:50 <- Type 3 Route
-untagged          vni-24     02:03:00:44:44:01  10.0.0.101             self, offload  00:09:37
-untagged          vni-24     02:03:00:44:44:02  10.0.0.101             self, offload  00:09:40
+untagged          vni-24     02:03:00:44:44:01  10.0.0.101             self, offload  00:09:37 <- Type 2 Route
+untagged          vni-24     02:03:00:44:44:02  10.0.0.101             self, offload  00:09:40 <- Type 2 Route
 untagged          vni-24     44:38:39:00:00:0c  10.0.0.40   static     self           00:09:50
 untagged          vni-24     44:38:39:00:00:4b  10.0.0.40   static     self           00:09:50
 untagged          vni-24     44:39:39:ff:00:24  10.0.0.40   static     self           00:09:50 <- Type 3 Route (advertise-default-gw)
@@ -567,7 +576,9 @@ untagged  bridge  vni-13     1a:68:e2:54:b1:50              permanent           
 untagged  bridge  vni-24     22:d1:d8:ee:5a:8a              permanent                 00:09:56
 ```
 
+## Reset the demo
 
+At any time, execute the playbook 'run_demo.yml' to return the configuration back to its LNV baseline starting point.
 
 ---
 
