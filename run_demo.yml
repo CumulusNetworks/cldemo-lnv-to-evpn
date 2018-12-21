@@ -84,7 +84,7 @@
   tasks:
     - name: Pause to ensure networking reload completes
       pause:
-        seconds: 10
+        seconds: 5
       
 - hosts: spine
   become: yes
@@ -119,7 +119,7 @@
         enabled: yes
         state: started
         
-- hosts: leaf
+- hosts: vtep
   become: yes
   tasks:
     - name: Enable LNV Registration Daemon vxrd
@@ -127,14 +127,6 @@
         name: vxrd
         enabled: yes
         state: started
-        
-- hosts: exit
-  become: yes
-  tasks:
-    - name: Enable LNV Registration Daemon vxrd
-      service:
-        name: vxrd
-        enabled: yes
-        state: started
+
         
         
