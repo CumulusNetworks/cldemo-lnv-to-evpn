@@ -19,7 +19,7 @@ For more information about the reference topology and other demos based on this 
 2. [Logging in](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#deploy-the-topology)
 3. [Setup the Demo](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#setting-up-the-demo)
 4. [Examine the LNV Environment](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#setting-up-the-demo)
-5. [Perform the migration to BGP EVPN]
+5. [Perform the migration to BGP EVPN](https://github.com/jubetz/cldemo-lnv-to-evpn/blob/master/README.md#performing-the-migration)
 6. Verification
 7. Cleanup
 
