@@ -221,7 +221,7 @@ cumulus@oob-mgmt-server:~/lnv-to-evpn$
 - We also have a situation unique to the exit leafs performing routing. For [centralized routing](https://docs.cumulusnetworks.com/display/DOCS/Ethernet+Virtual+Private+Network+-+EVPN#EthernetVirtualPrivateNetwork-EVPN-centralizedCentralizedRouting) we must also configure `advertise-default-gw` for the l2vpn evpn address family on those nodes.  This ensures that the exit/routing nodes advertise the SVI   So for exit01 and exit02, we'll need to:
 
 ```
-ansible exit -a 'net add bgp l2vpn evpn advertise-default-gw
+ansible exit -a 'net add bgp l2vpn evpn advertise-default-gw'
 ```
 
 ```
@@ -290,8 +290,53 @@ leaf04 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~$ 
 
 ```
+### 4. Remove the vxsnd configurtion on the service nodes
+```
+ansible spine -a 'net del lnv service-node anycast-ip 10.0.0.200'
+ansible spine01 -a 'net del lnv service-node source 10.0.0.21'
+ansible spine01 -a 'net del lnv service-node source 10.0.0.22'
+```
+```
+cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible spine -a 'net del lnv service-node anycast-ip 10.0.0.200'
+spine01 | SUCCESS | rc=0 >>
 
-### 4. Disable and stop the LNV service everywhere
+
+spine02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible spine01 -a 'net del lnv service-node source 10.0.0.21'
+spine01 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible spine02 -a 'net del lnv service-node source 10.0.0.22'
+spine02 | SUCCESS | rc=0 >>
+
+```
+
+### 5. Remove the defunct LNV service-node IP address from loopback and advertisement in BGP
+```
+ansible spine -a 'net del loopback lo ip address 10.0.0.200/32'
+ansible spine -a 'net del bgp ipv4 unicast network 10.0.0.200/32'
+```
+```
+cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible spine -a 'net del loopback lo ip address 10.0.0.200/32'
+spine02 | SUCCESS | rc=0 >>
+
+
+spine01 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible spine -a 'net del bgp ipv4 unicast network 10.0.0.200/32'
+spine01 | SUCCESS | rc=0 >>
+
+
+spine02 | SUCCESS | rc=0 >>
+
+
+cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ 
+```
+
+### 6. Disable and stop the LNV service everywhere
 This means we need to stop both the vxrd and vxsnd services and then also disable them so that they do not attempt to start again automatically.  Ansible's service module can handle both disabling and stopping the service with one command.
 
 Notice, we need *--become* for these commands. 
@@ -326,7 +371,7 @@ leaf01 | SUCCESS => {
 <snip>
 ```
 
-### 5. Commit all changes
+### 7. Commit all changes
 ```
 ansible network -a 'net commit'
 ```
@@ -341,7 +386,8 @@ This is the moment where BGP will restart and interfaces will be reloaded to app
 
 ## Verification
 
-### 1. Check that LNV is disabled.  'net show lnv' should return blank output.  Compare this output against the output from earlier on when LNV was enabled and functional.
+### 1. Check that LNV is disabled.  
+'net show lnv' should return blank output.  Compare this output against the output from earlier on when LNV was enabled and functional.
 
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show lnv'
