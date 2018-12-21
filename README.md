@@ -71,6 +71,9 @@ This playbook will configure the baseline reference topology to our LNV enabled 
 After the 'run_demo.yml' ansible playbook completes, we will have a functioning LNV controlled VXLAN topology. To get started, we will run a few commands to generate some traffic and to illustrate the topology.  First, lets run a traceroute from server01 to server04.  Server04 is a server that is in the other subnet and also in the other rack.  A successful traceroute here means both routing is functional bi-directionally, as is VXLAN encap/decap and bridging.  We can use ansible from the oob-mgmt-server to run this traceroute for us and return the result: 
 
 ```
+ansible server01 -a 'traceroute -n 10.2.4.104'
+```
+```
 cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
 server01 | SUCCESS | rc=0 >>
 traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
@@ -81,7 +84,9 @@ cumulus@oob-mgmt-server:~$
 ```
 
 Next, lets confirm that LNV is running.  Again, we can use ansible to run an NCLU command on all of the network nodes at the same time.
-
+```
+ansible network -a 'net show lnv'
+```
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show lnv'
 spine01 | SUCCESS | rc=0 >>
@@ -113,7 +118,9 @@ spine01 | SUCCESS | rc=0 >>
 The output from the ad hoc ansible command will be separated by host.  Look for lines similar to this, `spine01 | SUCCESS | rc=0 >>` as the demarcation between device outputs. You should see that the spines are **LNV Role: Service Node** and leafs/exit are **LNV Role: VTEP**. Remeber that with VXLAN active-active mode (clagd-vxlan-anycast-ip) we will see each VTEP register with it's *clagd-vxlan-anycast-ip* address and not it's primary loopback address.
 
 Lastly, lets take a look at a bridge mac address table on one of the leafs that has both VXLAN VTEPs. Your MAC addresses may differ from this example.  Notice that the linux bridge also learns the source VTEP IP address (TunnelDest) for MAC addresses that exist behind other VTEPs. 
-
+```
+ansible leaf01 -a 'net show bridge macs'
+```
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible leaf01 -a 'net show bridge macs'
 leaf01 | SUCCESS | rc=0 >>
@@ -401,24 +408,7 @@ leaf02 | SUCCESS | rc=0 >>
 
 
 leaf04 | SUCCESS | rc=0 >>
-
-
-spine02 | SUCCESS | rc=0 >>
-
-
-leaf01 | SUCCESS | rc=0 >>
-
-
-internet | SUCCESS | rc=0 >>
-
-
-exit01 | SUCCESS | rc=0 >>
-
-
-exit02 | SUCCESS | rc=0 >>
-
-
-cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
+<snip>
 ```
 
 ### 2. Ensure that BGP neighbors are up and both ipv4 and l2vpn EVPN address families are active.  You can continue to run these commands on all network nodes using ansible or individually on a node.
