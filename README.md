@@ -160,7 +160,7 @@ vtep - leaf01, leaf02, leaf03, leaf04, exit01, exit02<br>
 spine - spine01, spine02<br>
 exit - exit01, exit02
 
-### 1. First we'll deploy the necessary BGP configuration.  
+### 1. Deploy BGP changes to activate EVPN.  
 This will start with activating the l2vpn evpn address family for all of our existing neighbors.  We have to enable this everwhere we had LNV running so this will mean the leafs, spines, and exit(routing) nodes.  The spines will learn the EVPN Type-2 and Type-3 routes from the leafs, and then distribute the routes to the other EVPN enabled neighbors.  This is two short steps. One, activate the l2vpn evpn address family for each/all neighbors. Then, enable advertise-all-vni.
 
 Remember, these NCLU changes won't take effect until we issue the 'net commit' at a later step.
@@ -261,7 +261,8 @@ leaf01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
 
-### 3. Remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). This includes removing the vxrd-src-ip and vxrd-svcnode-ip configuration.
+### 3. Remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). 
+This includes removing the vxrd-src-ip and vxrd-svcnode-ip configuration configured on the loopback interface.
 
 ```
 ansible vtep -a 'net del loopback lo vxrd-src-ip'
@@ -325,7 +326,7 @@ leaf01 | SUCCESS => {
 <snip>
 ```
 
-### 5. Commit the changes
+### 5. Commit all changes
 ```
 ansible network -a 'net commit'
 ```
