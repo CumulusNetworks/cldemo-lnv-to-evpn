@@ -174,6 +174,7 @@ Remember, these NCLU changes won't take effect until we issue the 'net commit' a
 
 *Note: Repetitive output will be omitted for brevity and indicated by `<snip>`*
 
+- Activate BGP EVPN and advertise all VNIs on all of the VTEPs (leaf and exit) 
 ```
 ansible vtep -a 'net add bgp l2vpn evpn neighbor swp51-52 activate'
 ansible vtep -a 'net add bgp l2vpn evpn advertise-all-vni'
@@ -200,7 +201,7 @@ exit01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~$ 
 ```
 
-- We have repeat these steps for the spines.  The configuration is slightly different here.  Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
+- Repeat these steps for the spines.  THere are no VTEP interfaces on the spines, so we do not configure advertise-all-vni here. Ports 1-4 on the spines connect to leaf01-04.  Ports 29-30 connect to exit01 and exit02.
 
 ```
 ansible spine -a 'net add bgp l2vpn evpn neighbor swp1-4 activate'
@@ -225,12 +226,10 @@ spine01 | SUCCESS | rc=0 >>
 cumulus@oob-mgmt-server:~/lnv-to-evpn$
 ```
 
-- We also have a situation unique to the exit leafs performing routing. For [centralized routing](https://docs.cumulusnetworks.com/display/DOCS/Ethernet+Virtual+Private+Network+-+EVPN#EthernetVirtualPrivateNetwork-EVPN-centralizedCentralizedRouting) we must also configure `advertise-default-gw` for the l2vpn evpn address family on those nodes.  This ensures that the exit/routing nodes advertise the SVI   So for exit01 and exit02, we'll need to:
-
+- A situation unique to the exit leafs performing routing, [centralized routing](https://docs.cumulusnetworks.com/display/DOCS/Ethernet+Virtual+Private+Network+-+EVPN#EthernetVirtualPrivateNetwork-EVPN-centralizedCentralizedRouting) requires that `advertise-default-gw` be configured for the l2vpn evpn address family on those nodes.  This ensures that the exit/routing nodes advertise their SVI mac addresses.
 ```
 ansible exit -a 'net add bgp l2vpn evpn advertise-default-gw'
 ```
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible exit -a 'net add bgp l2vpn evpn advertise-default-gw'
 exit01 | SUCCESS | rc=0 >>
@@ -242,12 +241,10 @@ cumulus@oob-mgmt-server:~/lnv-to-evpn$
 ```
 
 ### 2. Disable bridge learning on all of the VXLAN VTEP interfaces (leafs/exit):
-
 ```
 ansible vtep -a 'net add vxlan vni-13 bridge learning off'
 ansible vtep -a 'net add vxlan vni-24 bridge learning off'
 ```
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible vtep -a 'net add vxlan vni-13 bridge learning off'
 exit01 | SUCCESS | rc=0 >>
@@ -267,15 +264,12 @@ leaf01 | SUCCESS | rc=0 >>
 
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ 
 ```
-
 ### 3. Remove the vxrd configuration from the loopback interfaces of VTEP nodes (leaf/exit). 
 This includes removing the vxrd-src-ip and vxrd-svcnode-ip configuration configured on the loopback interface.
-
 ```
 ansible vtep -a 'net del loopback lo vxrd-src-ip'
 ansible vtep -a 'net del loopback lo vxrd-svcnode-ip'
 ```
-
 ```
 cumulus@oob-mgmt-server:~$ ansible vtep -a 'net del loopback lo vxrd-src-ip'
 leaf02 | SUCCESS | rc=0 >>
@@ -319,7 +313,6 @@ cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ ansible spine02 -a 'net del lnv se
 spine02 | SUCCESS | rc=0 >>
 
 ```
-
 ### 5. Remove the defunct LNV service-node IP address from loopback and advertisement in BGP
 ```
 ansible spine -a 'net del loopback lo ip address 10.0.0.200/32'
@@ -342,8 +335,7 @@ spine02 | SUCCESS | rc=0 >>
 
 cumulus@oob-mgmt-server:~/cldemo-lnv-to-evpn$ 
 ```
-
-### 6. Disable and stop the LNV service everywhere
+### 6. Disable and stop the LNV service daemons everywhere
 This means we need to stop both the vxrd and vxsnd services and then also disable them so that they do not attempt to start again automatically.  Ansible's service module can handle both disabling and stopping the service with one command.
 
 Notice, we need *--become* for these commands. 
@@ -351,7 +343,6 @@ Notice, we need *--become* for these commands.
 ansible spine -m service -a 'name=vxsnd enabled=no state=stopped' --become
 ansible vtep -m service -a 'name=vxrd enabled=no state=stopped' --become
 ```
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible spine -m service -a 'name=vxsnd enabled=no state=stopped' --become
 spine02 | SUCCESS => {
@@ -377,16 +368,13 @@ leaf01 | SUCCESS => {
         "ActiveEnterTimestamp": "Tue 2018-12-18 20:53:21 UTC", 
 <snip>
 ```
-
 ### 7. Commit all changes
 ```
 ansible network -a 'net commit'
 ```
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net commit'
 ```
-
 This commit will return a fairly significant amount of output from each node returning the diff of the config files where the NCLU changes are being applied.  NCLU is also restarting services and applying interface changes as necessary.
 
 This is the moment where BGP will restart and interfaces will be reloaded to apply configuration changes (specifically the bridge learning change).  
@@ -395,7 +383,6 @@ This is the moment where BGP will restart and interfaces will be reloaded to app
 
 ### 1. Check that LNV is disabled.  
 'net show lnv' should return blank output.  Compare this output against the output from earlier on when LNV was enabled and functional.
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show lnv'
 leaf03 | SUCCESS | rc=0 >>
@@ -410,9 +397,7 @@ leaf02 | SUCCESS | rc=0 >>
 leaf04 | SUCCESS | rc=0 >>
 <snip>
 ```
-
 ### 2. Ensure that BGP neighbors are up and both ipv4 and l2vpn EVPN address families are active.  You can continue to run these commands on all network nodes using ansible or individually on a node.
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible network -a 'net show bgp sum'
 spine01 | SUCCESS | rc=0 >>
@@ -458,7 +443,6 @@ exit01(swp30)   4      65041    1060    1049        0    0    0 00:11:38        
 Total number of neighbors 6
 
 ```
-
 In this working example from looking at spine01, we can see that we have all 6 adjacent neighbors showing as up for both address families.  It's important to ensure that we're seeing a 'PfxRcd' that's larger than 0 to let us know that we're recieving routes.  This number will vary depending on the amount of mac addresses learned.
 
 ### 3. Generate Some Test Traffic
@@ -467,7 +451,6 @@ Repeat the traceroute from earlier
 ```
 ansible server01 -a 'traceroute -n 10.2.4.104'
 ```
-
 ```
 cumulus@oob-mgmt-server:~$ ansible server01 -a 'traceroute -n 10.2.4.104'
 server01 | SUCCESS | rc=0 >>
@@ -477,7 +460,6 @@ traceroute to 10.2.4.104 (10.2.4.104), 30 hops max, 60 byte packets
 
 cumulus@oob-mgmt-server:~$ 
 ```
-
 ### 4. Check the BGP EVPN Type-2 and Type-3 routes
 
 The traceroute above should ensure that the linux bridges have learned the MAC addresses of at least server01, server04 and the mac addresses of the SVIs performing routing at the exit nodes.  This information should be redistibuted into BGP as routes in the EVPN address family.  We can inspect these type-2 (MAC to IP) routes and type-3 (VTEP VXLAN tunnel interface IP) routes by checking 'net show bgp evpn route'
@@ -509,7 +491,6 @@ Route Distinguisher: 10.0.0.11:3
                     10.0.0.100                         32768 i
 <snip>
 ```
-
 Notice the legend at the top of the command output.  The number in the first bracket `[2]` or `[3]` indicates whether or not this is a type-2 or type-3 route.  In this output you can verify that MAC addresses of the servers or SVIs are being learned and what their VTEP VXLAN tunnel IP address is *remember clagd-vxlan-anycast-ip is used for active-active mode*
 
 ### 5. Check the Bridge Forwarding Table
@@ -520,7 +501,6 @@ We should see the information from the BGP EVPN routes be populated as described
 ```
 ansible leaf01 -a 'net show bridge macs'
 ```
-
 ```
 cumulus@oob-mgmt-server:~/lnv-to-evpn$ ansible leaf01 -a 'net show bridge macs'
 leaf01 | SUCCESS | rc=0 >>
