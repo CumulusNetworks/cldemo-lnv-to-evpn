@@ -336,7 +336,6 @@ exit 0
 #CUMULUS-AUTOPROVISIONING
 EOT
 
-mkdir l3-clos
 git clone -b lnv-to-evpn https://github.com/jubetz/cldemo-lnv-to-evpn lnv-to-evpn
 
 echo "############################################"
