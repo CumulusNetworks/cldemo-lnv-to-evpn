@@ -27,6 +27,7 @@ For more information about the reference topology and other demos based on this 
 After cloning (or downloading/extracting the .zip), change into the new directory named cldemo-lnv-to-evpn. From there, bring up the oob-mgmt-server and oob-mgmt-switch first.  Bringing the oob-mgmt devices up first helps make sure that the DHCP server on the oob-mgmt-server is up and is ready to hand out IP addresses to the rest of the network when it is provisioned with the last step, 'vagrant up'
 
 ***Virtualbox***
+
     git clone https://github.com/cumulusnetworks/cldemo-lnv-to-evpn
     cd cldemo-lnv-to-evpn
     vagrant up oob-mgmt-server oob-mgmt-switch
@@ -35,6 +36,7 @@ After cloning (or downloading/extracting the .zip), change into the new director
 For KVM/libvirt, rename the Vagrantfile-kvm to Vagrantfile before 'vagrant up'
 
 ***KVM/libvirt***
+
     git clone https://github.com/cumulusnetworks/cldemo-lnv-to-evpn
     cd cldemo-lnv-to-evpn
     mv Vagrantfile-kvm Vagrantfile
