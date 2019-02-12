@@ -1461,9 +1461,9 @@ end
       
 
     device.vm.provider "virtualbox" do |vbox|
-      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all', "--nictype2", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all', "--nictype3", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all', "--nictype4", "82545EM"]
+      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
 
@@ -1541,9 +1541,9 @@ end
       
 
     device.vm.provider "virtualbox" do |vbox|
-      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all', "--nictype2", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all', "--nictype3", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all', "--nictype4", "82545EM"]
+      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
 
@@ -1621,9 +1621,9 @@ end
       
 
     device.vm.provider "virtualbox" do |vbox|
-      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all', "--nictype2", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all', "--nictype3", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all', "--nictype4", "82545EM"]
+      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
 
@@ -1701,9 +1701,9 @@ end
       
 
     device.vm.provider "virtualbox" do |vbox|
-      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all', "--nictype2", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all', "--nictype3", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all', "--nictype4", "82545EM"]
+      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
 
@@ -1781,9 +1781,9 @@ end
       
 
     device.vm.provider "virtualbox" do |vbox|
-      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all', "--nictype2", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all', "--nictype3", "82545EM"]
-      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all', "--nictype4", "82545EM"]
+      vbox.customize ['modifyvm', :id, '--nicpromisc2', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc3', 'allow-all']
+      vbox.customize ['modifyvm', :id, '--nicpromisc4', 'allow-all']
       vbox.customize ["modifyvm", :id, "--nictype1", "virtio"]
     end
 
